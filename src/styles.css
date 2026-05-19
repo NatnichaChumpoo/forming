@@ -167,10 +167,45 @@ html, body { margin:0; padding:0; background:#0e0d0b; color:var(--ink);
 
 /* ─────────────── FLOOR MAP ─────────────── */
 .map-wrap { flex:1; background:var(--paper); border:1px solid var(--rule);
-  border-radius:8px; padding:26px 24px; display:flex; flex-direction:column;
-  justify-content:space-between; min-height:0;
+  border-radius:8px; padding:14px 16px; display:flex; flex-direction:column;
+  min-height:0; overflow:hidden;
   box-shadow:0 1px 0 rgba(0,0,0,.02),0 24px 48px -32px rgba(27,36,51,.18);
   position:relative; }
+
+/* canvas scroll container */
+.map-canvas-scroll { flex:1; overflow:auto; position:relative; border-radius:4px; }
+/* inner canvas — machines positioned absolutely inside */
+.map-canvas { position:relative; width:1520px; height:770px; }
+
+/* ── Canvas machine card ── */
+.canvas-card.vac-tile {
+  position:absolute; width:80px; height:100px; overflow:visible; cursor:pointer;
+}
+.canvas-card.vac-tile:hover { transform:translateY(-2px); border-color:var(--gold-2); }
+.canvas-card.vac-tile.edit-mode { cursor:grab; }
+.canvas-card.vac-tile.edit-mode:hover { transform:none; }
+.canvas-card.vac-tile.edit-mode:active,
+.canvas-card.vac-tile.dragging { cursor:grabbing; z-index:30; }
+.canvas-card.vac-tile.dragging { opacity:.85; box-shadow:0 12px 32px -8px rgba(27,36,51,.35); }
+.canvas-card.vac-tile.selected { border-color:var(--gold);
+  box-shadow:0 0 0 2px color-mix(in oklab,var(--gold),transparent 65%); }
+.canvas-card.vac-tile.edit-mode.selected { border-color:var(--gold);
+  box-shadow:0 0 0 2px color-mix(in oklab,var(--gold),transparent 60%); }
+
+/* category color stripe */
+.canvas-stripe { position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:5px 0 0 5px; }
+
+/* delete button */
+.canvas-del-btn {
+  position:absolute; top:-7px; right:-7px; width:18px; height:18px; border-radius:50%;
+  background:var(--st-down); border:2px solid var(--paper);
+  display:none; align-items:center; justify-content:center;
+  color:#fff; font-size:12px; line-height:1; cursor:pointer; z-index:5;
+  font-family:'Manrope',sans-serif; font-weight:700;
+}
+.canvas-card.edit-mode:hover .canvas-del-btn,
+.canvas-card.edit-mode.selected .canvas-del-btn { display:flex; }
+.canvas-del-btn:hover { opacity:.8; }
 .map-wrap::before { content:""; position:absolute; inset:6px;
   border:1px solid var(--gold-soft); border-radius:5px;
   pointer-events:none; opacity:.5; }
