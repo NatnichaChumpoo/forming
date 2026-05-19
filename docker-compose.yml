@@ -1,0 +1,16 @@
+version: '3.8'
+
+# ── Forming Monitor ────────────────────────────────────────────────────────────
+# restart: unless-stopped
+#   → เปิดอัตโนมัติทุกครั้งที่ server reboot หรือ container พัง
+#   → หยุดได้เฉพาะเมื่อสั่ง "docker compose down" หรือ "docker stop" ด้วยตนเอง
+#   → ห้ามปิด container นี้จนกว่าจะปิดเครื่อง server จริงๆ
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  forming-monitor:
+    build: .
+    container_name: forming-monitor
+    ports:
+      - "80:80"
+    restart: unless-stopped
