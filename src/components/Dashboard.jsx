@@ -346,6 +346,7 @@ function Dashboard() {
             drag={drag}
             onPointerDownMachine={onPointerDownMachine}
             onDeleteMachine={deleteMachine}
+            onDeselect={() => setSelected(null)}
             mapWrapRef={mapWrapRef}
             mapCanvasRef={mapCanvasRef}
           />

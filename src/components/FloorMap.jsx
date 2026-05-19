@@ -27,13 +27,15 @@ function CanvasCard({ m, status, selected, editMode, dragging, onClick, onPointe
   );
 }
 
-function FloorMap({ machines, statuses, onSelect, selectedId, editMode, drag, onPointerDownMachine, onDeleteMachine, mapWrapRef, mapCanvasRef }) {
+function FloorMap({ machines, statuses, onSelect, selectedId, editMode, drag, onPointerDownMachine, onDeleteMachine, onDeselect, mapWrapRef, mapCanvasRef }) {
   return (
     <div className="map-wrap" ref={mapWrapRef}>
       <span className="ornament tl"/><span className="ornament tr"/>
       <span className="ornament bl"/><span className="ornament br"/>
       <div className="map-canvas-scroll">
-        <div className="map-canvas" ref={mapCanvasRef}>
+        <div className="map-canvas" ref={mapCanvasRef}
+          onClick={editMode ? () => onDeselect() : undefined}
+        >
           {machines.map(m => (
             <CanvasCard
               key={m.id}
@@ -42,7 +44,7 @@ function FloorMap({ machines, statuses, onSelect, selectedId, editMode, drag, on
               selected={selectedId === m.id}
               editMode={editMode}
               dragging={drag ? drag.id === m.id : false}
-              onClick={!editMode ? () => onSelect(m) : undefined}
+              onClick={!editMode ? () => onSelect(m) : e => e.stopPropagation()}
               onPointerDown={editMode ? e => onPointerDownMachine(e, m) : undefined}
               onDelete={() => onDeleteMachine(m.id)}
             />
