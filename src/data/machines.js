@@ -3,7 +3,7 @@
 //  Machine metadata, layout, and export order
 // ─────────────────────────────────────────────
 
-export const MC_META = {
+const MC_META = {
   A01:{type:'C250T',group:'COMPRESSION',desc:'COMPRESSION 250 TON ( A01 )'},
   A02:{type:'C250T',group:'COMPRESSION',desc:'COMPRESSION 250 TON ( A02 )'},
   A03:{type:'C250T',group:'COMPRESSION',desc:'COMPRESSION 250 TON ( A03 )'},
@@ -56,7 +56,7 @@ export const MC_META = {
   D11:{type:'I250T', group:'INJECTION', desc:'INJECTION DESMA (SIGMA) 250 Ton (D11)'},
 };
 
-export const EXPORT_ORDER = [
+const EXPORT_ORDER = [
   'A01','A02','A03','A04','A05','A06','A07','A11','A12',
   'B01','B02','B03','B04','B05','B06','B07','B08','B09','B10',
   'B11','B12','B13','B14','B15','B16','B17','B18','B19',
@@ -64,7 +64,7 @@ export const EXPORT_ORDER = [
   'D01','D02','D03','D04','D05','D07','D08','D09','D10','D11',
 ];
 
-export const LAYOUT = [
+const LAYOUT = [
   {group:'INJECTION DESMA',accent:'',row:1,kind:'desma',
     machines:[{id:'D08',cap:250},{id:'D07',cap:400},{id:'D09',cap:400},{id:'D10',cap:250},{id:'D11',cap:250}]},
   {group:'FORMING',accent:'Vacuum',row:2,rowSide:'left',kind:'forming',vacuumBadge:true,

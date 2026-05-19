@@ -3,12 +3,8 @@
 //  Detail modal — shows machine info & status picker
 // ─────────────────────────────────────────────
 
-import { useState, useEffect } from 'react';
-import { STATUSES, statusByKey, REMARKS } from '../data/statuses.js';
-import { MC_META } from '../data/machines.js';
-import { stVar, shortTime } from '../utils/helpers.js';
 
-export function MachineModal({ machine, status, partNo, onClose, onChange, now }) {
+function MachineModal({ machine, status, partNo, onClose, onChange, now }) {
   const [draft, setDraft] = useState(status);
 
   // Reset draft when a different machine is opened

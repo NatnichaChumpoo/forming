@@ -3,8 +3,6 @@
 //  MachineCard tile + MoldArea + Group + FloorMap
 // ─────────────────────────────────────────────
 
-import { KIND_SVG } from './MachineSvgs.jsx';
-import { LAYOUT } from '../data/machines.js';
 
 // ── helpers ──────────────────────────────────
 function isVac(g) {
@@ -43,7 +41,7 @@ function MoldArea() {
 }
 
 // ── MachineCard ───────────────────────────────
-export function MachineCard({ m, status, selected, onClick, kind }) {
+function MachineCard({ m, status, selected, onClick, kind }) {
   const Inner = KIND_SVG[kind] || KIND_SVG.forming;
   const vb = kind === 'transfer' ? '0 0 120 80' : '0 0 60 80';
   return (
@@ -62,7 +60,7 @@ export function MachineCard({ m, status, selected, onClick, kind }) {
 }
 
 // ── Group ─────────────────────────────────────
-export function Group({ g, statuses, onSelect, selectedId, innerRef }) {
+function Group({ g, statuses, onSelect, selectedId, innerRef }) {
   const vac = isVac(g);
   return (
     <div className="group" style={g.moldArea ? { paddingTop:22, paddingBottom:22 } : null} ref={innerRef}>
@@ -108,10 +106,9 @@ export function Group({ g, statuses, onSelect, selectedId, innerRef }) {
 }
 
 // ── FloorMap ──────────────────────────────────
-export function FloorMap({ statuses, onSelect, selectedId, mapWrapRef, rightClusterRef, desmaRef }) {
-  // Group LAYOUT rows by row number
+function FloorMap({ layout, statuses, onSelect, selectedId, mapWrapRef, rightClusterRef, desmaRef }) {
   const rows = {};
-  LAYOUT.forEach(g => { (rows[g.row] || (rows[g.row] = [])).push(g); });
+  layout.forEach(g => { (rows[g.row] || (rows[g.row] = [])).push(g); });
 
   return (
     <div className="map-wrap" ref={mapWrapRef}>

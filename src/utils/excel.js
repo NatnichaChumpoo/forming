@@ -7,14 +7,7 @@
 //  Depends on: STATUS_EXPORT_NAME, IMPORT_STATUS_MAP  from ../data/statuses.js
 // ─────────────────────────────────────────────
 
-import { MC_META, EXPORT_ORDER } from '../data/machines.js';
-import { STATUS_EXPORT_NAME, IMPORT_STATUS_MAP } from '../data/statuses.js';
-
-/**
- * Parse an imported .xlsx file and return { newStatuses, newPartNos, updatedCount }.
- * Expected sheet columns: [Status, MC ID, Part No.]
- */
-export function parseImportFile(arrayBuffer, currentStatuses, currentPartNos) {
+function parseImportFile(arrayBuffer, currentStatuses, currentPartNos) {
   const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
@@ -36,10 +29,7 @@ export function parseImportFile(arrayBuffer, currentStatuses, currentPartNos) {
   return { newStatuses: newSt, newPartNos: newPn, updatedCount: upd };
 }
 
-/**
- * Build and trigger download of M_C Status Data.xlsx
- */
-export function exportStatusFile(statuses, partNos, counts, total, plan, actual) {
+function exportStatusFile(statuses, partNos, counts, total, plan, actual) {
   const ng  = 0;
   const diff = plan - actual;
   const now  = new Date();

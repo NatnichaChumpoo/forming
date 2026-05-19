@@ -3,7 +3,7 @@
 //  Inline SVG illustrations for each machine kind
 // ─────────────────────────────────────────────
 
-export function FormingSvg() {
+function FormingSvg() {
   return (
     <>
       <rect x="15" y="7"  width="30" height="9"  rx="1" fill="#1B2433"/>
@@ -35,7 +35,7 @@ export function FormingSvg() {
   );
 }
 
-export function DesmaSvg() {
+function DesmaSvg() {
   return (
     <>
       <path d="M6 24 Q 10 4 30 4 Q 50 4 54 24" stroke="#1B2433" strokeWidth="2.5" fill="none"/>
@@ -62,7 +62,7 @@ export function DesmaSvg() {
   );
 }
 
-export function InjectionSvg() {
+function InjectionSvg() {
   return (
     <>
       <path d="M24 4 L36 4 L34 12 L26 12 Z" fill="#1B2433"/>
@@ -85,7 +85,7 @@ export function InjectionSvg() {
   );
 }
 
-export function TransferSvg() {
+function TransferSvg() {
   return (
     <>
       <rect x="15" y="7"  width="30" height="9"  rx="1" fill="#1B2433"/>
@@ -118,8 +118,7 @@ export function TransferSvg() {
   );
 }
 
-/** Map kind string → SVG component */
-export const KIND_SVG = {
+const KIND_SVG = {
   forming:   FormingSvg,
   desma:     DesmaSvg,
   injection: InjectionSvg,

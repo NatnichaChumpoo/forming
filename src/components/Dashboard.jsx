@@ -3,12 +3,6 @@
 //  Root app component — wires all children together
 // ─────────────────────────────────────────────
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { LAYOUT } from '../data/machines.js';
-import { seededRand, fmtTime } from '../utils/helpers.js';
-import { Sidebar }      from './Sidebar.jsx';
-import { FloorMap }     from './FloorMap.jsx';
-import { MachineModal } from './MachineModal.jsx';
 
 // ── Deterministic initial statuses (seed = 7) ──
 function initialStatuses() {
@@ -30,11 +24,13 @@ function initialStatuses() {
   return out;
 }
 
-export function Dashboard() {
+function Dashboard() {
   const [statuses, setStatuses] = useState(initialStatuses);
   const [partNos,  setPartNos]  = useState({});
-  const [selected, setSelected] = useState(null);       // selected machine id
+  const [selected, setSelected] = useState(null);
   const [now,      setNow]      = useState(new Date());
+  const [page,     setPage]     = useState('dashboard');
+  const [layout,   setLayout]   = useState(LAYOUT);
 
   const rightClusterRef = useRef(null);
   const desmaRef        = useRef(null);
@@ -94,45 +90,61 @@ export function Dashboard() {
             <span className="k">System Time</span>
             <span className="v">{fmtTime(now)}</span>
           </div>
+          <button
+            className={`edit-mode-btn${page === 'edit' ? ' active' : ''}`}
+            onClick={() => setPage(p => p === 'dashboard' ? 'edit' : 'dashboard')}
+          >
+            {page === 'edit' ? '← Dashboard' : 'Edit Layout'}
+          </button>
         </div>
       </div>
 
       {/* ── Main layout ── */}
-      <div className="main">
-        <Sidebar
-          counts={counts}
-          total={total}
-          statuses={statuses}
-          partNos={partNos}
-          setStatuses={setStatuses}
-          setPartNos={setPartNos}
-        />
+      {page === 'dashboard' ? (
+        <>
+          <div className="main">
+            <Sidebar
+              counts={counts}
+              total={total}
+              statuses={statuses}
+              partNos={partNos}
+              setStatuses={setStatuses}
+              setPartNos={setPartNos}
+            />
 
-        <div className="col center">
-          <div className="panel-title" style={{ marginBottom:14 }}>
-            <span className="t">Forming Floor · Live Map</span>
-            <span className="n">II</span>
+            <div className="col center">
+              <div className="panel-title" style={{ marginBottom:14 }}>
+                <span className="t">Forming Floor · Live Map</span>
+                <span className="n">II</span>
+              </div>
+              <FloorMap
+                layout={layout}
+                statuses={statuses}
+                onSelect={m => setSelected(m.id)}
+                selectedId={selected}
+                mapWrapRef={mapWrapRef}
+                rightClusterRef={rightClusterRef}
+                desmaRef={desmaRef}
+              />
+            </div>
           </div>
-          <FloorMap
-            statuses={statuses}
-            onSelect={m => setSelected(m.id)}
-            selectedId={selected}
-            mapWrapRef={mapWrapRef}
-            rightClusterRef={rightClusterRef}
-            desmaRef={desmaRef}
-          />
-        </div>
-      </div>
 
-      {/* ── Machine detail modal ── */}
-      {selectedMachine && (
-        <MachineModal
-          machine={selectedMachine}
-          status={statuses[selectedMachine.id]}
-          partNo={partNos[selectedMachine.id] || '—'}
-          onClose={() => setSelected(null)}
-          onChange={ns => setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }))}
-          now={now}
+          {selectedMachine && (
+            <MachineModal
+              machine={selectedMachine}
+              status={statuses[selectedMachine.id]}
+              partNo={partNos[selectedMachine.id] || '—'}
+              onClose={() => setSelected(null)}
+              onChange={ns => setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }))}
+              now={now}
+            />
+          )}
+        </>
+      ) : (
+        <EditPage
+          layout={layout}
+          onSave={newLayout => { setLayout(newLayout); setPage('dashboard'); }}
+          onCancel={() => setPage('dashboard')}
         />
       )}
     </>

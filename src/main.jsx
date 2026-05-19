@@ -7,6 +7,4 @@
 //  Each file must also be served over HTTP (not file://).
 // ─────────────────────────────────────────────
 
-import { Dashboard } from './components/Dashboard.jsx';
-
 ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);

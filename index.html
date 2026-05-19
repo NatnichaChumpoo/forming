@@ -36,13 +36,35 @@
         const s  = Math.min(vw / 1920, vh / 1080);
         stage.style.transform =
           `translate(${(vw - 1920*s)/2}px, ${(vh - 1080*s)/2}px) scale(${s})`;
+        stage.dataset.scale = s;
       }
       fit();
       window.addEventListener('resize', fit);
     })();
   </script>
 
-  <!-- App entry — Babel transpiles JSX on the fly -->
-  <script type="text/babel" data-presets="env,react" src="src/main.jsx"></script>
+  <!-- Global React hooks (shared across all component scripts) -->
+  <script>
+    var useState    = React.useState;
+    var useEffect   = React.useEffect;
+    var useMemo     = React.useMemo;
+    var useRef      = React.useRef;
+    var useCallback = React.useCallback;
+  </script>
+
+  <!-- Data & utils (plain JS, no JSX) -->
+  <script src="src/data/machines.js"></script>
+  <script src="src/data/statuses.js"></script>
+  <script src="src/utils/helpers.js"></script>
+  <script src="src/utils/excel.js"></script>
+
+  <!-- Components (JSX — Babel transpiles each file) -->
+  <script type="text/babel" data-presets="react" src="src/components/MachineSvgs.jsx"></script>
+  <script type="text/babel" data-presets="react" src="src/components/FloorMap.jsx"></script>
+  <script type="text/babel" data-presets="react" src="src/components/Sidebar.jsx"></script>
+  <script type="text/babel" data-presets="react" src="src/components/MachineModal.jsx"></script>
+  <script type="text/babel" data-presets="react" src="src/components/EditPage.jsx"></script>
+  <script type="text/babel" data-presets="react" src="src/components/Dashboard.jsx"></script>
+  <script type="text/babel" data-presets="react" src="src/main.jsx"></script>
 </body>
 </html>

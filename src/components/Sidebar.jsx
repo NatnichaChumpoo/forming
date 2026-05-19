@@ -3,12 +3,8 @@
 //  Left column: KPIs, legend, Excel import/export
 // ─────────────────────────────────────────────
 
-import { useRef } from 'react';
-import { STATUSES } from '../data/statuses.js';
-import { fmtNum } from '../utils/helpers.js';
-import { parseImportFile, exportStatusFile } from '../utils/excel.js';
 
-export function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos }) {
+function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos }) {
   const plan     = 5060752;
   const actual   = 2197508;
   const ng       = 0;

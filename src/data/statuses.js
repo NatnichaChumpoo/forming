@@ -3,7 +3,7 @@
 //  Status definitions, labels, and import maps
 // ─────────────────────────────────────────────
 
-export const STATUSES = [
+const STATUSES = [
   {key:'running',  name:'Running',         desc:'Operating within tolerance'},
   {key:'down',     name:'Machine Down',    desc:'Unplanned mechanical fault'},
   {key:'setup',    name:'Mold Setup',      desc:'Tooling changeover in progress'},
@@ -14,20 +14,19 @@ export const STATUSES = [
   {key:'plan',     name:'NO Plan',         desc:'No production scheduled'},
 ];
 
-export const statusByKey = Object.fromEntries(STATUSES.map(s => [s.key, s]));
+const statusByKey = Object.fromEntries(STATUSES.map(s => [s.key, s]));
 
-export const STATUS_EXPORT_NAME = {
+const STATUS_EXPORT_NAME = {
   running:'Running', down:'Machine Down', setup:'Mold Setup', damage:'Mold Damage',
   qa:'Quality Problem', material:'NO Material', manpower:'NO Manpower', plan:'NO Plan',
 };
 
-// maps lowercase Excel cell values → internal status key
-export const IMPORT_STATUS_MAP = {
+const IMPORT_STATUS_MAP = {
   'running':'running','machine down':'down','mold setup':'setup','mold damage':'damage',
   'quality problem':'qa','no material':'material','no manpower':'manpower','no plan':'plan',
 };
 
-export const REMARKS = {
+const REMARKS = {
   running:  'Cycle stable. Cavity pressure nominal. Operator on station.',
   down:     'E-stop triggered at 09:42. Maintenance dispatched. ETA 25 min.',
   setup:    'Mold M-3217 staged. Calibration pass in progress.',
