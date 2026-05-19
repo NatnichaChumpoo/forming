@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Forming Machine — Operations Monitor</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="src/styles.css"/>
+</head>
+<body>
+
+  <!-- Stage wrapper (handles viewport scaling) -->
+  <div class="stage-wrap">
+    <div id="stage" class="stage">
+      <div id="root"></div>
+    </div>
+  </div>
+
+  <!-- CDN dependencies (no bundler required) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"    crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"    crossorigin></script>
+  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Stage fit script -->
+  <script>
+    (function () {
+      const stage = document.getElementById('stage');
+      function fit() {
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const s  = Math.min(vw / 1920, vh / 1080);
+        stage.style.transform =
+          `translate(${(vw - 1920*s)/2}px, ${(vh - 1080*s)/2}px) scale(${s})`;
+      }
+      fit();
+      window.addEventListener('resize', fit);
+    })();
+  </script>
+
+  <!-- App entry — Babel transpiles JSX on the fly -->
+  <script type="text/babel" data-presets="env,react" src="src/main.jsx"></script>
+</body>
+</html>
