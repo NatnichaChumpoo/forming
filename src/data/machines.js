@@ -104,12 +104,20 @@ const CAT_META = {
 
 const CAT_KIND = {
   compression: 'forming',
-  vacuum:      'forming',
+  vacuum:      'vacuum',
   injection:   'injection',
   transfer:    'transfer',
   desma:       'desma',
   aux:         'forming',
 };
+
+const MACHINE_TYPE_REFERENCE = [
+  { key: 'compression', name: 'Compression',    label: 'Forming Press',   kind: 'forming',   color: CAT_META.compression.color },
+  { key: 'vacuum',      name: 'Vacuum Forming', label: 'Vacuum Press',    kind: 'vacuum',    color: CAT_META.vacuum.color },
+  { key: 'injection',   name: 'Injection',      label: 'Injection Press', kind: 'injection', color: CAT_META.injection.color },
+  { key: 'transfer',    name: 'Transfer',       label: 'Transfer Line',   kind: 'transfer',  color: CAT_META.transfer.color },
+  { key: 'desma',       name: 'DESMA',          label: 'DESMA Press',     kind: 'desma',     color: CAT_META.desma.color },
+];
 
 const MACHINES = [
   {id:'D08',category:'desma',      cap:250, x:760, y:40 },

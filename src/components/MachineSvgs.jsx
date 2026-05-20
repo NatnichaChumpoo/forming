@@ -118,8 +118,67 @@ function TransferSvg() {
   );
 }
 
+function VacuumSvg() {
+  return (
+    <>
+      {/* Overhead vacuum manifold (horizontal pipe with drop legs) */}
+      <rect x="6"  y="2"  width="48" height="2.5" rx="0.5" fill="#1B2433"/>
+      <rect x="6"  y="2"  width="48" height="0.8" fill="#C8A96B"/>
+      <circle cx="6"  cy="3.2" r="1.6" fill="#C8A96B"/>
+      <circle cx="54" cy="3.2" r="1.6" fill="#C8A96B"/>
+      <rect x="18" y="4.5" width="2"  height="3" fill="#1B2433"/>
+      <rect x="29" y="4.5" width="2"  height="3" fill="#1B2433"/>
+      <rect x="40" y="4.5" width="2"  height="3" fill="#1B2433"/>
+
+      {/* Press head (no exhaust vents — replaced by manifold above) */}
+      <rect x="15" y="7"  width="30" height="9"  rx="1" fill="#1B2433"/>
+      <rect x="15" y="7"  width="30" height="1.5" fill="#C8A96B"/>
+
+      {/* Frame columns */}
+      <rect x="9"  y="16" width="3"  height="32" fill="#D7D1BF"/>
+      <rect x="48" y="16" width="3"  height="32" fill="#D7D1BF"/>
+
+      {/* Machine body */}
+      <rect x="13" y="19" width="34" height="26" rx="2" fill="#1B2433"/>
+      <rect x="17" y="21" width="4"  height="2"  fill="#E2B86C" opacity="0.85"/>
+      <rect x="28" y="21" width="4"  height="2"  fill="#E2B86C" opacity="0.85"/>
+      <rect x="39" y="21" width="4"  height="2"  fill="#E2B86C" opacity="0.85"/>
+
+      {/* Core (status colour) */}
+      <rect className="core" x="16" y="24" width="28" height="18" rx="1.5"/>
+      <rect x="16" y="24" width="28" height="3"  fill="#fff" opacity="0.18"/>
+
+      {/* Right-side vacuum cylinder/tank with banding */}
+      <rect x="52" y="22" width="6"  height="20" rx="2"   fill="#1B2433"/>
+      <rect x="52" y="22" width="6"  height="2"  fill="#C8A96B"/>
+      <rect x="52" y="40" width="6"  height="2"  fill="#C8A96B"/>
+      <rect x="53" y="27" width="4"  height="0.8" fill="#C8A96B" opacity="0.6"/>
+      <rect x="53" y="30" width="4"  height="0.8" fill="#C8A96B" opacity="0.6"/>
+      <rect x="53" y="33" width="4"  height="0.8" fill="#C8A96B" opacity="0.6"/>
+      <rect x="47" y="30" width="5"  height="2.5" fill="#1B2433"/>
+
+      {/* Left-side auxiliary vacuum duct with elbow */}
+      <rect x="2"  y="26" width="2"  height="14" fill="#1B2433"/>
+      <rect x="2"  y="26" width="2"  height="0.8" fill="#C8A96B"/>
+      <rect x="4"  y="32" width="5"  height="2"  fill="#1B2433"/>
+
+      {/* Base */}
+      <rect x="4"  y="48" width="52" height="6"  fill="#3A4356" rx="1"/>
+      <rect x="4"  y="54" width="52" height="2"  fill="#1B2433"/>
+
+      {/* Vacuum gauge wheel — needle angled, indicating suction */}
+      <circle cx="30" cy="66" r="7" fill="#1B2433"/>
+      <circle cx="30" cy="66" r="5" fill="none" stroke="#C8A96B" strokeWidth="0.6"/>
+      <rect x="29.4" y="60.5" width="1.2" height="6" fill="#C8A96B" transform="rotate(-55 30 66)"/>
+      <circle cx="30" cy="66" r="1.5" fill="#C8A96B"/>
+      <path d="M14 66 L19 66 M16 64 L19 66 L16 68" stroke="#C8A96B" strokeWidth="0.7" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    </>
+  );
+}
+
 const KIND_SVG = {
   forming:   FormingSvg,
+  vacuum:    VacuumSvg,
   desma:     DesmaSvg,
   injection: InjectionSvg,
   transfer:  TransferSvg,

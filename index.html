@@ -25,21 +25,49 @@
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"    crossorigin></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"    crossorigin></script>
-  <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- xlsx-js-style: used ONLY for parseImportFile (XLSX.read).
+       Kept separate from export so import continues to work without changes. -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" crossorigin></script>
+  <!-- ExcelJS: used for exportStatusFile — supports cell styles + image embedding.
+       Exposes global ExcelJS object (different from XLSX, no conflict). -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" crossorigin></script>
 
-  <!-- Stage fit script -->
+  <!-- Map-fit script: scales only the floor-map canvas to its container.
+       The rest of the UI flows responsively with the viewport. -->
   <script>
     (function () {
       const stage = document.getElementById('stage');
+      if (!stage) return;
+      stage.dataset.scale = 1;
+      let observer = null;
+
       function fit() {
-        const vw = window.innerWidth, vh = window.innerHeight;
-        const s  = Math.min(vw / 1920, vh / 1080);
-        stage.style.transform =
-          `translate(${(vw - 1920*s)/2}px, ${(vh - 1080*s)/2}px) scale(${s})`;
+        const mapCanvas = document.querySelector('.map-canvas');
+        const mapWrap   = document.querySelector('.map-canvas-scroll');
+        if (!mapCanvas || !mapWrap) return;
+        const cw = mapWrap.clientWidth, ch = mapWrap.clientHeight;
+        if (cw <= 0 || ch <= 0) return;
+        const s = Math.min(cw / 1520, ch / 770);
+        mapCanvas.style.transformOrigin = 'top left';
+        mapCanvas.style.transform = 'scale(' + s + ')';
         stage.dataset.scale = s;
+        if (!observer && window.ResizeObserver) {
+          observer = new ResizeObserver(fit);
+          observer.observe(mapWrap);
+        }
       }
-      fit();
+
       window.addEventListener('resize', fit);
+
+      // Retry until React mounts the map, then attach the observer.
+      let tries = 0;
+      const iv = setInterval(function () {
+        if (++tries > 200) { clearInterval(iv); return; }
+        if (document.querySelector('.map-canvas')) {
+          clearInterval(iv);
+          fit();
+        }
+      }, 50);
     })();
   </script>
 
