@@ -8,6 +8,8 @@
   --ink:#1B2433; --ink-2:#3A4356; --muted:#6B7280;
   --rule:#E2DCCC; --rule-2:#D7D1BF;
   --gold:#B8965A; --gold-2:#C8A96B; --gold-soft:#E9DDC2;
+  --sidebar-open-w: 380px;
+  --sidebar-collapsed-w: 68px;
   --st-run:oklch(0.62 0.10 150); --st-down:oklch(0.55 0.16 27);
   --st-setup:oklch(0.78 0.12 88); --st-damage:oklch(0.68 0.15 55);
   --st-qa:oklch(0.50 0.12 300); --st-mat:oklch(0.48 0.07 55);
@@ -61,7 +63,11 @@ html, body { margin:0; padding:0; background:#0e0d0b; color:var(--ink);
 
 /* ─────────────── LAYOUT ─────────────── */
 .main { height:calc(1080px - 84px); display:grid;
-  grid-template-columns:380px minmax(0,1fr); gap:0; }
+  grid-template-columns:var(--sidebar-open-w) minmax(0,1fr); gap:0;
+  transition:grid-template-columns .24s ease; }
+.main.sidebar-collapsed {
+  grid-template-columns:var(--sidebar-collapsed-w) minmax(0,1fr);
+}
 .col { padding:22px 22px 18px; display:flex; flex-direction:column; min-height:0; }
 .col.left   { background:var(--paper); border-right:1px solid var(--rule); overflow:hidden; }
 .col.center { padding:20px 24px; background:var(--bg); }
@@ -356,6 +362,25 @@ html, body { margin:0; padding:0; background:#0e0d0b; color:var(--ink);
   padding:7px 18px; border:1.5px solid var(--gold); border-radius:4px;
   background:transparent; color:var(--gold); cursor:pointer;
   transition:background .15s, color .15s;
+}
+.sidebar-toggle-btn {
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  padding:8px 14px;
+  border:1px solid var(--rule-2);
+  border-radius:4px;
+  background:#fff;
+  color:var(--ink-2);
+  cursor:pointer;
+  transition:border-color .15s, color .15s, background .15s;
+}
+.sidebar-toggle-btn:hover {
+  border-color:var(--gold);
+  color:var(--ink);
+  background:#fbf6e6;
 }
 .edit-mode-btn:hover,
 .edit-mode-btn.active { background:var(--gold); color:#0e1420; }

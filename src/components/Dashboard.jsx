@@ -138,6 +138,7 @@ function Dashboard() {
   const [selected, setSelected] = useState(null);
   const [now,      setNow]      = useState(new Date());
   const [editMode, setEditMode] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [machines, setMachines] = useState(() => MACHINES.map(m => ({ ...m })));
   const [drag,     setDrag]     = useState(null);
   const [snapOn,   setSnapOn]   = useState(true);
@@ -282,6 +283,14 @@ function Dashboard() {
             </div>
           ) : (
             <>
+              <button
+                className={`sidebar-toggle-btn${sidebarCollapsed ? ' collapsed' : ''}`}
+                onClick={() => setSidebarCollapsed(v => !v)}
+                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {sidebarCollapsed ? 'Show Panel' : 'Hide Panel'}
+              </button>
               <div className="live"><span className="dot"></span> Live · MES sync 3s</div>
               <div className="meta-block">
                 <span className="k">System Time</span>
@@ -299,7 +308,7 @@ function Dashboard() {
       </div>
 
       {/* ── Main ── */}
-      <div className="main">
+      <div className={`main${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
 
         {/* Left column */}
         <div className="col left">
@@ -324,6 +333,8 @@ function Dashboard() {
               partNos={partNos}
               setStatuses={setStatuses}
               setPartNos={setPartNos}
+              collapsed={sidebarCollapsed}
+              onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
             />
           )}
         </div>
