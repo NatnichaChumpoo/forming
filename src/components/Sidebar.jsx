@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────
 
 
-function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos }) {
+function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, collapsed, onToggleCollapsed }) {
   const plan     = 5060752;
   const actual   = 2197508;
   const ng       = 0;
@@ -40,6 +40,20 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos }) 
   // ── Export ──
   function handleExport() {
     exportStatusFile(statuses, partNos, counts, total, plan, actual);
+  }
+
+  if (collapsed) {
+    return (
+      <div className="col left sidebar-rail">
+        <button className="rail-toggle" onClick={onToggleCollapsed} title="Expand sidebar">
+          »
+        </button>
+        <button className="rail-anchor" onClick={onToggleCollapsed}>Sum</button>
+        <button className="rail-anchor" onClick={onToggleCollapsed}>Stat</button>
+        <button className="rail-anchor" onClick={onToggleCollapsed}>Type</button>
+        <button className="rail-anchor rail-anchor-bottom" onClick={onToggleCollapsed}>Data</button>
+      </div>
+    );
   }
 
   return (

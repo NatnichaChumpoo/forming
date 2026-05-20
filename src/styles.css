@@ -71,6 +71,39 @@ html, body { margin:0; padding:0; background:#0e0d0b; color:var(--ink);
 .col { padding:22px 22px 18px; display:flex; flex-direction:column; min-height:0; }
 .col.left   { background:var(--paper); border-right:1px solid var(--rule); overflow:hidden; }
 .col.center { padding:20px 24px; background:var(--bg); }
+.sidebar-rail {
+  padding:14px 8px 16px;
+  align-items:center;
+  justify-content:flex-start;
+  gap:10px;
+  transition:padding .24s ease;
+}
+
+.rail-toggle,
+.rail-anchor {
+  width:100%;
+  min-height:44px;
+  border:1px solid var(--rule);
+  border-radius:6px;
+  background:var(--surface);
+  color:var(--ink-2);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+
+.rail-toggle:hover,
+.rail-anchor:hover {
+  border-color:var(--gold);
+  color:var(--ink);
+  background:#fbf6e6;
+}
+
+.rail-anchor-bottom {
+  margin-top:auto;
+}
 .panel-title { display:flex; align-items:baseline; justify-content:space-between;
   margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--rule); }
 .panel-title .t { font-family:'Cormorant Garamond',serif; font-weight:500;

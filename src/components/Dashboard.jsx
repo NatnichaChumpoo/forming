@@ -312,11 +312,11 @@ function Dashboard() {
       </div>
 
       {/* ── Main ── */}
-      <div className={`main${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+        <div className={`main${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
 
         {/* Left column */}
-        <div className="col left">
-          {editMode ? (
+        {editMode ? (
+          <div className="col left">
             <EditSidebar
               machines={machines}
               selectedId={selected}
@@ -329,19 +329,19 @@ function Dashboard() {
               snapOn={snapOn}
               onSnapToggle={() => setSnapOn(p => !p)}
             />
-          ) : (
-            <Sidebar
-              counts={counts}
-              total={total}
-              statuses={statuses}
-              partNos={partNos}
-              setStatuses={setStatuses}
-              setPartNos={setPartNos}
-              collapsed={sidebarCollapsed}
-              onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
-            />
-          )}
-        </div>
+          </div>
+        ) : (
+          <Sidebar
+            counts={counts}
+            total={total}
+            statuses={statuses}
+            partNos={partNos}
+            setStatuses={setStatuses}
+            setPartNos={setPartNos}
+            collapsed={sidebarCollapsed}
+            onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
+          />
+        )}
 
         {/* Center column */}
         <div className="col center">
