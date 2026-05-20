@@ -258,7 +258,11 @@ function Dashboard() {
   }, [selected, machines, editMode]);
 
   function toggleEditMode() {
-    setEditMode(p => !p);
+    setEditMode(p => {
+      const next = !p;
+      if (next) setSidebarCollapsed(false);
+      return next;
+    });
     setSelected(null);
     setDrag(null);
   }
@@ -284,7 +288,7 @@ function Dashboard() {
           ) : (
             <>
               <button
-                className={`sidebar-toggle-btn${sidebarCollapsed ? ' collapsed' : ''}`}
+                className="sidebar-toggle-btn"
                 onClick={() => setSidebarCollapsed(v => !v)}
                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
