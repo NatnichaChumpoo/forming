@@ -138,7 +138,7 @@ function Dashboard() {
   const [selected, setSelected] = useState(null);
   const [now,      setNow]      = useState(new Date());
   const [editMode, setEditMode] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.innerWidth < 1024);
   const [machines, setMachines] = useState(() => MACHINES.map(m => ({ ...m })));
   const [drag,     setDrag]     = useState(null);
   const [snapOn,   setSnapOn]   = useState(true);
@@ -368,6 +368,13 @@ function Dashboard() {
         </div>
 
       </div>
+
+      {/* Mobile backdrop — closes sidebar when tapped; CSS hides on desktop */}
+      <div
+        className={`mobile-backdrop${!sidebarCollapsed ? ' open' : ''}`}
+        onClick={() => setSidebarCollapsed(true)}
+        aria-hidden="true"
+      />
 
       {/* Modal — normal mode only */}
       {selectedMachine && (

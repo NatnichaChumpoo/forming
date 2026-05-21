@@ -852,3 +852,159 @@ html, body { margin:0; padding:0; width:100%; height:100%;
 }
 .ep-toast.err { background:rgba(255,92,92,.1); border-color:rgba(255,92,92,.35); color:#8b1a1a; }
 @keyframes ep-fade-in { from { opacity:0; transform:translateX(-50%) translateY(6px); } }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE
+   Desktop / laptop ≥ 1024 px : no rules below change anything above.
+   Tablet / mobile  < 1024 px : sidebar becomes fixed overlay drawer.
+   Phone            ≤  768 px : compact topbar, phone-friendly modal.
+   Small phone      ≤  480 px : minimal topbar, single-column modal.
+═══════════════════════════════════════════════════════════════════ */
+
+/* Mobile-only elements — hidden on desktop by default */
+.sidebar-mobile-close { display:none; }
+
+.mobile-backdrop {
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(15,18,24,.42);
+  z-index:199;
+  cursor:pointer;
+  border:none; padding:0;
+}
+
+/* ────────────────────────────────────────────────────────────
+   Tablet + Mobile  (max-width: 1023px)
+   Sidebar leaves the grid and becomes a position:fixed drawer.
+   Map fills the full viewport width.
+──────────────────────────────────────────────────────────── */
+@media (max-width:1023px) {
+
+  /* Topbar: slightly shorter, brand truncates */
+  .topbar { height:52px; padding:0 14px; gap:10px; }
+  .brand h1 { font-size:18px; overflow:hidden; text-overflow:ellipsis;
+    max-width:200px; white-space:nowrap; }
+  .brand .sub { display:none; }
+  .crest { width:28px; height:28px; font-size:15px; }
+  .meta-block .k { display:none; }
+  .meta-block .v { font-size:12px; }
+  .sidebar-toggle-btn, .edit-mode-btn {
+    font-size:10px; padding:7px 12px; letter-spacing:.10em;
+  }
+
+  /* Main layout: single column — sidebar is a fixed overlay, not a grid track.
+     minmax(0,1fr) prevents the 1520px map-canvas from expanding the track. */
+  .main,
+  .main.sidebar-collapsed {
+    grid-template-columns:minmax(0,1fr) !important;
+    height:calc(100vh - 52px);
+  }
+
+  /* Sidebar: fixed full-height overlay drawer, hidden by default */
+  .col.left {
+    position:fixed !important;
+    top:52px; left:0;
+    width:320px; max-width:86vw;
+    height:calc(100vh - 52px);
+    z-index:200;
+    transform:translateX(-100%);
+    transition:transform .24s ease, box-shadow .24s ease;
+    box-shadow:none;
+    overflow-y:auto; overflow-x:hidden;
+    border-right:1px solid var(--rule);
+  }
+
+  /* Sidebar open: main does NOT have sidebar-collapsed */
+  .main:not(.sidebar-collapsed) .col.left {
+    transform:translateX(0);
+    box-shadow:6px 0 28px -4px rgba(27,36,51,.22);
+  }
+
+  /* Rail (collapsed icon column): hidden on mobile — sidebar just disappears */
+  .sidebar-rail { display:none !important; }
+
+  /* Mobile close button at top of drawer */
+  .sidebar-mobile-close {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 0 10px; margin-bottom:6px;
+    border-bottom:1px solid var(--rule); flex-shrink:0;
+  }
+
+  /* Backdrop: shown when sidebar is open on mobile */
+  .mobile-backdrop.open { display:block; }
+
+  /* Modal: fit within mobile viewport, z-index above sidebar */
+  .modal-scrim { z-index:210; }
+  .modal {
+    width:min(calc(100vw - 20px), 640px);
+    max-height:calc(100vh - 40px);
+    overflow-y:auto;
+  }
+
+  /* Comfortable tap targets */
+  .btn { min-height:38px; padding:10px 16px; }
+  .excel-btn { padding:9px 8px; }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Phone  (max-width: 768px)
+──────────────────────────────────────────────────────────── */
+@media (max-width:768px) {
+
+  .topbar { height:50px; padding:0 12px; gap:8px; }
+  .brand h1 { font-size:15px; max-width:150px; }
+  .meta-block { display:none; }
+  .top-right { gap:8px; }
+  .sidebar-toggle-btn, .edit-mode-btn {
+    font-size:9px; padding:6px 10px; letter-spacing:.10em;
+  }
+
+  .main { height:calc(100vh - 50px); }
+  .col.left { top:50px; height:calc(100vh - 50px); width:300px; }
+
+  /* Modal: phone-width, scrollable */
+  .modal {
+    width:calc(100vw - 16px);
+    max-height:calc(100vh - 32px);
+    border-radius:8px;
+  }
+  .modal-head { padding:16px 20px; }
+  .modal-head .id-line .id { font-size:28px; }
+  .modal-body { padding:16px 20px; gap:14px; }
+  .modal-foot { padding:12px 20px; flex-wrap:wrap; gap:10px; }
+  .modal-foot .actions { margin-left:auto; }
+
+  /* Status picker: 2 columns on phone */
+  .status-grid { grid-template-columns:repeat(2,1fr); }
+}
+
+/* ────────────────────────────────────────────────────────────
+   Small phone  (max-width: 480px)
+──────────────────────────────────────────────────────────── */
+@media (max-width:480px) {
+
+  .topbar { height:48px; padding:0 10px; gap:6px; }
+  .brand { gap:8px; }
+  .brand h1 { font-size:13px; max-width:110px; }
+  .crest { width:26px; height:26px; font-size:13px; }
+  .live { display:none; }
+  .sidebar-toggle-btn, .edit-mode-btn {
+    font-size:9px; padding:5px 8px; letter-spacing:.08em;
+  }
+
+  .main { height:calc(100vh - 48px); }
+  .col.left { top:48px; height:calc(100vh - 48px); }
+
+  /* Modal: full width, single-column body */
+  .modal { width:calc(100vw - 12px); border-radius:6px; }
+  .modal-head { padding:14px 16px; }
+  .modal-head .id-line .id { font-size:24px; }
+  .modal-head .id-line .zone { display:none; }
+  .modal-body { grid-template-columns:1fr; gap:10px; padding:14px 16px; }
+  .modal-foot { padding:10px 16px; }
+
+  /* Legend: keep text readable */
+  .legend-card .name { font-size:12px; }
+  .legend-card .desc { font-size:9px; }
+  .kpi .val { font-size:18px; }
+}

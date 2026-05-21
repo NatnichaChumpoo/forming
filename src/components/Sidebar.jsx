@@ -189,6 +189,20 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, co
 
   return (
     <div className="col left" ref={colRef}>
+
+      {/* Mobile close button — hidden on desktop via CSS */}
+      <div className="sidebar-mobile-close">
+        <span style={{ fontFamily:'IBM Plex Mono', fontSize:9, letterSpacing:'.22em',
+          textTransform:'uppercase', color:'var(--muted)' }}>Operations Panel</span>
+        <button
+          onClick={onToggleCollapsed}
+          style={{ background:'none', border:'1px solid var(--rule)', borderRadius:4,
+            cursor:'pointer', color:'var(--ink-2)', fontSize:18, lineHeight:1,
+            padding:'3px 9px', fontFamily:'Manrope', fontWeight:300 }}
+          aria-label="Close panel"
+        >×</button>
+      </div>
+
       {/* I · Summary */}
       <div className="panel-title" ref={summaryRef}>
         <span className="t">Summary</span>
