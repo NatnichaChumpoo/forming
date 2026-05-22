@@ -23,9 +23,24 @@ function initialStatuses() {
 }
 
 /* ── Edit-mode left sidebar ── */
-function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChange, onDelete, onAdd, onReSnap, snapOn, onSnapToggle }) {
+function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChange, onDelete, onAdd, onReSnap, snapOn, onSnapToggle, onRename }) {
   const m   = selectedId ? machines.find(mm => mm.id === selectedId) : null;
   const cat = m ? (CAT_META[m.category] || { name: m.category, color: '#B8965A' }) : null;
+  const [renameVal,  setRenameVal]  = useState(m ? (m.displayId || m.id) : '');
+  const [renameWarn, setRenameWarn] = useState('');
+  useEffect(() => {
+    setRenameVal(m ? (m.displayId || m.id) : '');
+    setRenameWarn('');
+  }, [selectedId]);
+  function applyRename() {
+    if (!m) return;
+    const trimmed = renameVal.trim();
+    if (!trimmed) { setRenameWarn('ID cannot be empty.'); setRenameVal(m.displayId || m.id); return; }
+    const dup = machines.some(mm => mm.id !== m.id && (mm.displayId || mm.id) === trimmed);
+    if (dup) { setRenameWarn(`"${trimmed}" already used.`); setRenameVal(m.displayId || m.id); return; }
+    setRenameWarn('');
+    onRename(trimmed);
+  }
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
@@ -42,10 +57,23 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10, padding:'8px 10px', background:'var(--surface)', border:`1px solid ${cat.color}44`, borderRadius:6 }}>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontFamily:'IBM Plex Mono', fontSize:18, fontWeight:600, color:'var(--ink)' }}>{m.id}</div>
+                <div style={{ fontFamily:'IBM Plex Mono', fontSize:18, fontWeight:600, color:'var(--ink)' }}>{m.displayId || m.id}</div>
                 <div style={{ fontFamily:'IBM Plex Mono', fontSize:9, letterSpacing:'.12em', textTransform:'uppercase', color:cat.color }}>{cat.name} · {m.cap}T</div>
               </div>
               <button onClick={onDelete} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--st-down)', fontSize:20, lineHeight:1, padding:'2px 5px', borderRadius:3 }} title="Delete">×</button>
+            </div>
+
+            <div style={{ marginBottom:8 }}>
+              <div style={{ fontFamily:'IBM Plex Mono', fontSize:8, letterSpacing:'.18em', textTransform:'uppercase', color:'var(--muted)', marginBottom:3 }}>Machine ID</div>
+              <input
+                key={m.id + '_name'}
+                value={renameVal}
+                onChange={e => { setRenameVal(e.target.value); if (renameWarn) setRenameWarn(''); }}
+                onBlur={applyRename}
+                onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') { setRenameVal(m.displayId || m.id); setRenameWarn(''); } }}
+                style={{ width:'100%', background:'var(--surface)', border:'1px solid var(--rule-2)', borderRadius:4, padding:'5px 8px', fontFamily:'IBM Plex Mono', fontSize:11, color:'var(--ink)', outline:'none', boxSizing:'border-box' }}
+              />
+              {renameWarn && <div style={{ fontFamily:'IBM Plex Mono', fontSize:9, color:'var(--st-down)', marginTop:3 }}>{renameWarn}</div>}
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:8 }}>
@@ -323,6 +351,7 @@ function Dashboard() {
               catCounts={catCounts}
               onSetCategory={cat => selected && setMachines(ms => ms.map(m => m.id === selected ? { ...m, category: cat } : m))}
               onCapChange={cap => selected && setMachines(ms => ms.map(m => m.id === selected ? { ...m, cap: Math.max(0, Number(cap) || 0) } : m))}
+              onRename={name => selected && setMachines(ms => ms.map(m => m.id === selected ? { ...m, displayId: name } : m))}
               onDelete={() => selected && deleteMachine(selected)}
               onAdd={addMachine}
               onReSnap={reSnapAll}

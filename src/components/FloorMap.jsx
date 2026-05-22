@@ -21,7 +21,7 @@ function CanvasCard({ m, status, selected, editMode, dragging, onClick, onPointe
       <svg className="machine" viewBox={vb} preserveAspectRatio="xMidYMid meet" aria-hidden="true">
         <Inner/>
       </svg>
-      <div className="id">{m.id}</div>
+      <div className="id">{m.displayId || m.id}</div>
       <span className="corner"/>
     </div>
   );

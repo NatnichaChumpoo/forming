@@ -18,7 +18,7 @@ function MachineModal({ machine, status, partNo, onClose, onChange, now }) {
         <div className="modal-head">
           <div className="crumb">Machine Detail · Live</div>
           <div className="id-line">
-            <div className="id">{machine.id}</div>
+            <div className="id">{machine.displayId || machine.id}</div>
             <div className="cap">{machine.cap} T</div>
             <div className="zone">{machine.zone}</div>
           </div>
@@ -85,7 +85,7 @@ function MachineModal({ machine, status, partNo, onClose, onChange, now }) {
 
         {/* ── Footer ── */}
         <div className="modal-foot">
-          <div className="left">Audit log · {machine.id} · {shortTime(now)}</div>
+          <div className="left">Audit log · {machine.displayId || machine.id} · {shortTime(now)}</div>
           <div className="actions">
             <button className="btn" onClick={onClose}>Cancel</button>
             <button className="btn primary" onClick={() => { onChange(draft); onClose(); }}>
