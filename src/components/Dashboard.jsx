@@ -163,6 +163,7 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
 function Dashboard() {
   const [statuses, setStatuses] = useState(initialStatuses);
   const [partNos,  setPartNos]  = useState({});
+  const [remarks,  setRemarks]  = useState({});
   const [selected, setSelected] = useState(null);
   const [now,      setNow]      = useState(new Date());
   const [editMode, setEditMode] = useState(false);
@@ -411,8 +412,10 @@ function Dashboard() {
           machine={selectedMachine}
           status={statuses[selectedMachine.id]}
           partNo={partNos[selectedMachine.id] || '—'}
+          remark={remarks[selectedMachine.id] || ''}
           onClose={() => setSelected(null)}
           onChange={ns => setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }))}
+          onRemarkChange={text => setRemarks(prev => ({ ...prev, [selectedMachine.id]: text }))}
           now={now}
         />
       )}

@@ -4,11 +4,12 @@
 // ─────────────────────────────────────────────
 
 
-function MachineModal({ machine, status, partNo, onClose, onChange, now }) {
-  const [draft, setDraft] = useState(status);
+function MachineModal({ machine, status, partNo, remark, onClose, onChange, onRemarkChange, now }) {
+  const [draft,       setDraft]       = useState(status);
+  const [draftRemark, setDraftRemark] = useState(remark || '');
 
-  // Reset draft when a different machine is opened
   useEffect(() => setDraft(status), [status, machine.id]);
+  useEffect(() => setDraftRemark(remark || ''), [machine.id]);
 
   return (
     <div className="modal-scrim" onClick={onClose}>
@@ -62,7 +63,13 @@ function MachineModal({ machine, status, partNo, onClose, onChange, now }) {
 
           <div className="field full">
             <span className="k">Remark</span>
-            <div className="remark">{REMARKS[draft]}</div>
+            <textarea
+              className="remark"
+              value={draftRemark}
+              placeholder={REMARKS[draft]}
+              onChange={e => setDraftRemark(e.target.value)}
+              rows={3}
+            />
           </div>
 
           {/* ── Status picker ── */}
@@ -88,7 +95,7 @@ function MachineModal({ machine, status, partNo, onClose, onChange, now }) {
           <div className="left">Audit log · {machine.displayId || machine.id} · {shortTime(now)}</div>
           <div className="actions">
             <button className="btn" onClick={onClose}>Cancel</button>
-            <button className="btn primary" onClick={() => { onChange(draft); onClose(); }}>
+            <button className="btn primary" onClick={() => { onChange(draft); onRemarkChange(draftRemark); onClose(); }}>
               Apply Change
             </button>
           </div>
