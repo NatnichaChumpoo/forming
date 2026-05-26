@@ -14,3 +14,22 @@ services:
     ports:
       - "80:80"
     restart: unless-stopped
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: forming_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_DATABASE: forming_monitor
+      MYSQL_USER: forming_user
+      MYSQL_PASSWORD: forming1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  mysql_data:

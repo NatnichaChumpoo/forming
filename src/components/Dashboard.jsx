@@ -303,7 +303,7 @@ function Dashboard() {
         <div className="brand">
           <div className="crest">F</div>
           <div>
-            <h1>Forming Operations · Plant 04</h1>
+            <h1>Forming Operations</h1>
             <div className="sub">Status Forming Machine · Shift A · Day 1</div>
           </div>
         </div>
