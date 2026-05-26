@@ -3,7 +3,7 @@ services:
     build: .
     container_name: forming-monitor
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-80}:80"
     restart: unless-stopped
 
   backend:
@@ -20,7 +20,7 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD:-forming1234}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://10.255.255.173,http://localhost,http://localhost:5173}
     ports:
-      - "4000:4000"
+      - "${BACKEND_PORT:-4000}:4000"
     depends_on:
       mysql:
         condition: service_healthy
@@ -35,7 +35,7 @@ services:
       MYSQL_USER: forming_user
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-forming1234}
     ports:
-      - "3306:3306"
+      - "${MYSQL_HOST_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
