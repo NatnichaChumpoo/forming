@@ -1,0 +1,31 @@
+.claude/
+.superpowers/
+.worktrees/
+
+# Local test data and one-off exports. These are generated on each PC.
+*.xlsx
+/CARLOGO.png
+startup.md
+
+# Installed Node dependencies. Recreate with npm ci/npm install from package-lock.json.
+node_modules/
+backend/node_modules/
+
+# Runtime secrets and machine-local backend config.
+# Keep backend/.env.example tracked as the template for new machines.
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Node and package-manager logs.
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor noise.
+.DS_Store
+Thumbs.db

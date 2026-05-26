@@ -34,7 +34,7 @@ const MC_META = {
   B19:{type:'C200T',group:'COMPRESSION',desc:'COMPRESSION 200 TON ( B19 )'},
   C01:{type:'V200TT',group:'VACUUM',    desc:'VACUUM 200 TON ( C01 )'},
   C02:{type:'V200TT',group:'VACUUM',    desc:'VACUUM 200 TON ( C02 )'},
-  C03:{type:'V200TT',group:'VACUUM',    desc:'VACUUM 200 TON ( C05 )'},
+  C03:{type:'V200TT',group:'VACUUM',    desc:'VACUUM 200 TON ( C03 )'},
   C07:{type:'I150T', group:'INJECTION', desc:'INJECTION 150 TON ( C07 )'},
   C08:{type:'I150T', group:'INJECTION', desc:'INJECTION 150 TON ( C08 )'},
   C09:{type:'I150T', group:'INJECTION', desc:'INJECTION 150 TON ( C09 )'},
@@ -60,7 +60,7 @@ const EXPORT_ORDER = [
   'A01','A02','A03','A04','A05','A06','A07','A11','A12',
   'B01','B02','B03','B04','B05','B06','B07','B08','B09','B10',
   'B11','B12','B13','B14','B15','B16','B17','B18','B19',
-  'C01','C02','C05','C07','C08','C09','C10','C13','C14','C15','C16','C17',
+  'C01','C02','C03','C07','C08','C09','C10','C13','C14','C15','C16','C17',
   'D01','D02','D03','D04','D05','D07','D08','D09','D10','D11',
 ];
 
@@ -75,7 +75,7 @@ const LAYOUT = [
     machines:[{id:'C10',cap:150},{id:'C09',cap:150},{id:'C08',cap:150},{id:'C07',cap:150}]},
   {group:'MOLD AREA',row:2,rowSide:'right',moldArea:true,machines:[]},
   {group:'VACUUM',row:2,rowSide:'right',kind:'forming',vacuumBadge:true,
-    machines:[{id:'C05',cap:500},{id:'C02',cap:500},{id:'C01',cap:500}]},
+    machines:[{id:'C03',cap:200},{id:'C02',cap:200},{id:'C01',cap:200}]},
   {group:'FORMING',accent:'Line B-West',row:3,kind:'forming',
     machines:[{id:'B19',cap:200},{id:'B18',cap:200},{id:'B17',cap:200},{id:'B16',cap:200},{id:'B15',cap:200},{id:'B14',cap:200}]},
   {group:'VACUUM FORMING',accent:'Line B-Mid',row:3,kind:'forming',vacuumBadge:true,
