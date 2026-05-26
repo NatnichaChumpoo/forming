@@ -1,12 +1,3 @@
-version: '3.8'
-
-# ── Forming Monitor ────────────────────────────────────────────────────────────
-# restart: unless-stopped
-#   → เปิดอัตโนมัติทุกครั้งที่ server reboot หรือ container พัง
-#   → หยุดได้เฉพาะเมื่อสั่ง "docker compose down" หรือ "docker stop" ด้วยตนเอง
-#   → ห้ามปิด container นี้จนกว่าจะปิดเครื่อง server จริงๆ
-# ──────────────────────────────────────────────────────────────────────────────
-
 services:
   forming-monitor:
     build: .
@@ -15,21 +6,44 @@ services:
       - "80:80"
     restart: unless-stopped
 
-services:
+  backend:
+    build:
+      context: ./backend
+    container_name: forming_backend
+    restart: unless-stopped
+    environment:
+      PORT: "4000"
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: forming_monitor
+      DB_USER: forming_user
+      DB_PASSWORD: ${MYSQL_PASSWORD:-forming1234}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://10.255.255.173,http://localhost,http://localhost:5173}
+    ports:
+      - "4000:4000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   mysql:
     image: mysql:8.0
     container_name: forming_mysql
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root1234
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
       MYSQL_DATABASE: forming_monitor
       MYSQL_USER: forming_user
-      MYSQL_PASSWORD: forming1234
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-forming1234}
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
   mysql_data:

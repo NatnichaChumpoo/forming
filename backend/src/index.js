@@ -1,9 +1,10 @@
 require('dotenv').config();
 const express  = require('express');
 const cors     = require('cors');
+const { getCorsOrigin } = require('./config');
 const app      = express();
 
-app.use(cors({ origin: 'http://localhost:5173' })); // Vite dev port
+app.use(cors({ origin: getCorsOrigin(process.env.CORS_ORIGIN) }));
 app.use(express.json());
 
 // Routes
