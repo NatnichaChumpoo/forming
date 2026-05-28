@@ -34,7 +34,7 @@ router.patch('/:id/status', async (req, res) => {
          part_no    = IF(VALUES(part_no) IS NULL, part_no, VALUES(part_no)),
          remark     = VALUES(remark),
          updated_by = VALUES(updated_by)`,
-      [id, status, part_no !== undefined ? (part_no || null) : undefined, remark || null, updated_by || 'system']
+      [id, status, part_no || null, remark || null, updated_by || 'system']
     );
 
     await db.query(
