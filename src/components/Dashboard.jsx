@@ -161,7 +161,7 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
 
 /* ── Main Dashboard ── */
 function Dashboard() {
-  const [statuses, setStatuses] = useState(initialStatuses);
+  const [statuses, setStatuses] = useState({});
   const [partNos,  setPartNos]  = useState({});
   const [remarks,  setRemarks]  = useState({});
   const [selected, setSelected] = useState(null);
@@ -171,7 +171,32 @@ function Dashboard() {
   const [machines, setMachines] = useState(() => MACHINES.map(m => ({ ...m })));
   const [drag,     setDrag]     = useState(null);
   const [snapOn,   setSnapOn]   = useState(true);
-
+  const lastSaved = useRef(0);
+   useEffect(() => {
+    const BASE = `http://${window.location.hostname}:4000/api`;
+    async function load() {
+      if (Date.now() - lastSaved.current < 10000) return;
+      try {
+        const res = await fetch(`${BASE}/machines`);
+        const { data } = await res.json();
+        if (!data || data.length === 0) return;
+        const st = {}, pn = {}, rm = {};
+        data.forEach(m => {
+          st[m.id] = m.status || 'running';
+          if (m.part_no) pn[m.id] = m.part_no;
+          if (m.remark)  rm[m.id] = m.remark;
+        });
+        setStatuses(st);
+        setPartNos(pn);
+        setRemarks(rm);
+      } catch (e) {
+        console.warn('API not reachable, using static data', e);
+      }
+    }
+    load();
+    const timer = setInterval(load, 5000);
+    return () => clearInterval(timer);
+  }, []);
   const mapWrapRef   = useRef(null);
   const mapCanvasRef = useRef(null);
 
@@ -370,6 +395,7 @@ function Dashboard() {
             setPartNos={setPartNos}
             collapsed={sidebarCollapsed}
             onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
+            lastSaved={lastSaved}
           />
         )}
 
@@ -414,8 +440,22 @@ function Dashboard() {
           partNo={partNos[selectedMachine.id] || '—'}
           remark={remarks[selectedMachine.id] || ''}
           onClose={() => setSelected(null)}
-          onChange={ns => setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }))}
-          onRemarkChange={text => setRemarks(prev => ({ ...prev, [selectedMachine.id]: text }))}
+          onApply={async (ns, text ,partNo) => {
+          lastSaved.current = Date.now();
+          setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }));
+          setRemarks(prev => ({ ...prev, [selectedMachine.id]: text }));
+    // ✅ เพิ่ม: คง partNo เดิมไว้ใน state
+          const currentPartNo = partNos[selectedMachine.id] || null;
+          const BASE = `http://${window.location.hostname}:4000/api`;
+          const res = await fetch(`${BASE}/machines/${selectedMachine.id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+    // ✅ เพิ่ม: ส่ง part_no ไปด้วยทุกครั้ง
+            body: JSON.stringify({ status: ns, remark: text, updated_by: 'operator', part_no: currentPartNo }),
+        });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.error || 'Save failed');
+      }}
           now={now}
         />
       )}

@@ -57,7 +57,7 @@ function RailIconData() {
   );
 }
 
-function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, collapsed, onToggleCollapsed }) {
+function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, collapsed, onToggleCollapsed, lastSaved }) {
   const plan       = 5416750;
   const actual     = 3486451;
   const ng         = 0;
@@ -102,13 +102,13 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, co
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = evt => {
+    reader.onload = async evt => {
       try {
-        const { newStatuses, newPartNos, updatedCount } =
-          parseImportFile(evt.target.result, statuses, partNos);
+        const { newStatuses, newPartNos, summary } =
+          await parseImportFile(evt.target.result, statuses, partNos, lastSaved);
         setStatuses(newStatuses);
         setPartNos(newPartNos);
-        setImportFeedback(`✓ ${updatedCount} machines updated from "${file.name}"`);
+        setImportFeedback(summary);
         setImportIsErr(false);
       } catch (err) {
         setImportFeedback(`✗ Error: ${err.message}`);

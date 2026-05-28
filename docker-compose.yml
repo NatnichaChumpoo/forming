@@ -34,8 +34,6 @@ services:
       MYSQL_DATABASE: forming_monitor
       MYSQL_USER: forming_user
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-forming1234}
-    ports:
-      - "${MYSQL_HOST_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
