@@ -437,7 +437,7 @@ function Dashboard() {
         <MachineModal
           machine={selectedMachine}
           status={statuses[selectedMachine.id]}
-          partNo={partNos[selectedMachine.id] || '—'}
+          partNo={partNos[selectedMachine.id] || null}
           remark={remarks[selectedMachine.id] || ''}
           onClose={() => setSelected(null)}
           onApply={async (ns, text ,partNo) => {
@@ -445,13 +445,13 @@ function Dashboard() {
           setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }));
           setRemarks(prev => ({ ...prev, [selectedMachine.id]: text }));
     // ✅ เพิ่ม: คง partNo เดิมไว้ใน state
-          const currentPartNo = partNos[selectedMachine.id] || null;
+          const currentPartNo = partNos[selectedMachine.id] ?? undefined;
           const BASE = `http://${window.location.hostname}:4000/api`;
           const res = await fetch(`${BASE}/machines/${selectedMachine.id}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
     // ✅ เพิ่ม: ส่ง part_no ไปด้วยทุกครั้ง
-            body: JSON.stringify({ status: ns, remark: text, updated_by: 'operator', part_no: currentPartNo }),
+            body: JSON.stringify({ status: ns, remark: text, updated_by: 'operator', ...(currentPartNo ? { part_no: currentPartNo } : {}) }),
         });
         const json = await res.json();
         if (!json.ok) throw new Error(json.error || 'Save failed');
