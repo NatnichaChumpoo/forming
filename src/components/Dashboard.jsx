@@ -43,7 +43,7 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
   }
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'hidden' }}>
+    <div style={{ display:'flex', flexDirection:'column', height:'100%', overflow:'auto' }}>
 
       {/* header */}
       <div className="panel-title" style={{ marginBottom:0, paddingBottom:10 }}>
@@ -60,7 +60,7 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
                 <div style={{ fontFamily:'IBM Plex Mono', fontSize:18, fontWeight:600, color:'var(--ink)' }}>{m.displayId || m.id}</div>
                 <div style={{ fontFamily:'IBM Plex Mono', fontSize:9, letterSpacing:'.12em', textTransform:'uppercase', color:cat.color }}>{cat.name} · {m.cap}T</div>
               </div>
-              <button onClick={onDelete} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--st-down)', fontSize:20, lineHeight:1, padding:'2px 5px', borderRadius:3 }} title="Delete">×</button>
+              <button onClick={() => onDelete(m.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'var(--st-down)', fontSize:20, lineHeight:1, padding:'2px 5px', borderRadius:3 }} title="Delete">×</button>
             </div>
 
             <div style={{ marginBottom:8 }}>
@@ -144,7 +144,6 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
       {/* controls */}
       <div style={{ marginTop:'auto', paddingTop:14, borderTop:'1px solid var(--rule)', display:'flex', flexDirection:'column', gap:7, flexShrink:0 }}>
         <button onClick={onAdd} className="btn primary" style={{ textAlign:'center' }}>+ Add Machine</button>
-        <button onClick={onReSnap} className="btn" style={{ textAlign:'center' }}>Re-snap to Grid</button>
         <label style={{ display:'flex', alignItems:'center', gap:7, cursor:'pointer', fontFamily:'IBM Plex Mono', fontSize:10, letterSpacing:'.12em', textTransform:'uppercase', color:'var(--ink-2)' }}>
           <input type="checkbox" checked={snapOn} onChange={onSnapToggle} style={{ accentColor:'var(--gold)', width:13, height:13 }}/>
           Snap to Grid (20px)
@@ -171,24 +170,38 @@ function Dashboard() {
   const [machines, setMachines] = useState(() => MACHINES.map(m => ({ ...m })));
   const [drag,     setDrag]     = useState(null);
   const [snapOn,   setSnapOn]   = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState(null);
   const lastSaved = useRef(0);
-   useEffect(() => {
-    const BASE = `http://${window.location.hostname}:4000/api`;
+
+  const MC_BASE = `http://${window.location.hostname}:4000/api`;
+
+  useEffect(() => {
     async function load() {
       if (Date.now() - lastSaved.current < 10000) return;
       try {
-        const res = await fetch(`${BASE}/machines`);
+        const res = await fetch(`${MC_BASE}/machines`);
         const { data } = await res.json();
         if (!data || data.length === 0) return;
         const st = {}, pn = {}, rm = {};
+        const mc = [];
         data.forEach(m => {
           st[m.id] = m.status || 'running';
           if (m.part_no) pn[m.id] = m.part_no;
           if (m.remark)  rm[m.id] = m.remark;
+          mc.push({
+            id:        m.id,
+            displayId: m.display_id || m.id,
+            category:  m.category   || 'compression',
+            cap:       m.cap        || 200,
+            zone:      m.zone       || m.id[0],
+            x:         m.x          ?? 200,
+            y:         m.y          ?? 60,
+          });
         });
         setStatuses(st);
         setPartNos(pn);
         setRemarks(rm);
+        if (mc.length > 0) setMachines(mc);
       } catch (e) {
         console.warn('API not reachable, using static data', e);
       }
@@ -197,6 +210,7 @@ function Dashboard() {
     const timer = setInterval(load, 5000);
     return () => clearInterval(timer);
   }, []);
+
   const mapWrapRef   = useRef(null);
   const mapCanvasRef = useRef(null);
 
@@ -229,7 +243,25 @@ function Dashboard() {
       nx = Math.max(0, nx); ny = Math.max(0, ny);
       setMachines(ms => ms.map(m => m.id === drag.id ? { ...m, x: nx, y: ny } : m));
     }
-    function up() { setDrag(null); }
+    function up() {
+      setDrag(prev => {
+        if (prev) {
+          setMachines(ms => {
+            const m = ms.find(m => m.id === prev.id);
+            if (m) {
+              lastSaved.current = Date.now();
+              fetch(`${MC_BASE}/machines/${m.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ x: m.x, y: m.y }),
+              }).catch(console.warn);
+            }
+            return ms;
+          });
+        }
+        return null;
+      });
+    }
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup',   up);
     return () => {
@@ -243,7 +275,7 @@ function Dashboard() {
     function onKey(e) {
       if (!editMode || e.target.tagName === 'INPUT') return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selected) {
-        deleteMachine(selected);
+        openDeleteConfirm(selected);
         return;
       }
       if (e.key === 'Escape') { setSelected(null); return; }
@@ -266,21 +298,52 @@ function Dashboard() {
   }, [editMode, selected]);
 
   // Machine operations
-  function addMachine() {
+  function openAddConfirm() {
     const ids = new Set(machines.map(m => m.id));
     let n = 1, id;
     do { id = `M${String(n).padStart(2,'0')}`; n++; } while (ids.has(id));
-    const x = snapGrid(200 + (machines.length % 9) * 100);
-    const y = snapGrid(60  + Math.floor(machines.length / 9) * 120);
-    setMachines(ms => [...ms, { id, category:'compression', cap:200, x, y }]);
-    setStatuses(prev => ({ ...prev, [id]: 'running' }));
-    setSelected(id);
+    setConfirmDialog({ type:'add', id, category:'compression', cap:200 });
   }
 
-  function deleteMachine(id) {
-    setMachines(ms => ms.filter(m => m.id !== id));
-    setStatuses(prev => { const next = { ...prev }; delete next[id]; return next; });
-    if (selected === id) setSelected(null);
+  async function confirmAdd() {
+    const { id, category, cap } = confirmDialog;
+    if (!id.trim()) { alert('กรุณากรอก Machine ID'); return; }
+    setConfirmDialog(null);
+    try {
+      const res = await fetch(`${MC_BASE}/machines`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id.trim(), category, cap }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      const x = snapGrid(200 + (machines.length % 9) * 100);
+      const y = snapGrid(60  + Math.floor(machines.length / 9) * 120);
+      setMachines(ms => [...ms, { id: id.trim(), category, cap, x, y }]);
+      setStatuses(prev => ({ ...prev, [id.trim()]: 'running' }));
+      setSelected(id.trim());
+    } catch (err) {
+      alert('Add failed: ' + err.message);
+    }
+  }
+
+  function openDeleteConfirm(id) {
+    setConfirmDialog({ type:'delete', id });
+  }
+
+  async function confirmDelete() {
+    const { id } = confirmDialog;
+    setConfirmDialog(null);
+    try {
+      const res = await fetch(`${MC_BASE}/machines/${id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      setMachines(ms => ms.filter(m => m.id !== id));
+      setStatuses(prev => { const next = { ...prev }; delete next[id]; return next; });
+      if (selected === id) setSelected(null);
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
   }
 
   function reSnapAll() {
@@ -366,7 +429,7 @@ function Dashboard() {
       </div>
 
       {/* ── Main ── */}
-        <div className={`main${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
+      <div className={`main${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
 
         {/* Left column */}
         {editMode ? (
@@ -375,11 +438,36 @@ function Dashboard() {
               machines={machines}
               selectedId={selected}
               catCounts={catCounts}
-              onSetCategory={cat => selected && setMachines(ms => ms.map(m => m.id === selected ? { ...m, category: cat } : m))}
-              onCapChange={cap => selected && setMachines(ms => ms.map(m => m.id === selected ? { ...m, cap: Math.max(0, Number(cap) || 0) } : m))}
-              onRename={name => selected && setMachines(ms => ms.map(m => m.id === selected ? { ...m, displayId: name } : m))}
-              onDelete={() => selected && deleteMachine(selected)}
-              onAdd={addMachine}
+              onSetCategory={cat => {
+                if (!selected) return;
+                setMachines(ms => ms.map(m => m.id === selected ? { ...m, category: cat } : m));
+                fetch(`${MC_BASE}/machines/${selected}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ category: cat }),
+                }).catch(console.warn);
+              }}
+              onCapChange={cap => {
+                if (!selected) return;
+                const newCap = Math.max(0, Number(cap) || 0);
+                setMachines(ms => ms.map(m => m.id === selected ? { ...m, cap: newCap } : m));
+                fetch(`${MC_BASE}/machines/${selected}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ cap: newCap }),
+                }).catch(console.warn);
+              }}
+              onRename={name => {
+                if (!selected) return;
+                setMachines(ms => ms.map(m => m.id === selected ? { ...m, displayId: name } : m));
+                fetch(`${MC_BASE}/machines/${selected}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ display_id: name }),
+                }).catch(console.warn);
+              }}
+              onDelete={id => openDeleteConfirm(id)}
+              onAdd={openAddConfirm}
               onReSnap={reSnapAll}
               snapOn={snapOn}
               onSnapToggle={() => setSnapOn(p => !p)}
@@ -416,7 +504,7 @@ function Dashboard() {
             editMode={editMode}
             drag={drag}
             onPointerDownMachine={onPointerDownMachine}
-            onDeleteMachine={deleteMachine}
+            onDeleteMachine={openDeleteConfirm}
             onDeselect={() => setSelected(null)}
             mapWrapRef={mapWrapRef}
             mapCanvasRef={mapCanvasRef}
@@ -425,7 +513,7 @@ function Dashboard() {
 
       </div>
 
-      {/* Mobile backdrop — closes sidebar when tapped; CSS hides on desktop */}
+      {/* Mobile backdrop */}
       <div
         className={`mobile-backdrop${!sidebarCollapsed ? ' open' : ''}`}
         onClick={() => setSidebarCollapsed(true)}
@@ -440,24 +528,109 @@ function Dashboard() {
           partNo={partNos[selectedMachine.id] || null}
           remark={remarks[selectedMachine.id] || ''}
           onClose={() => setSelected(null)}
-          onApply={async (ns, text ,partNo) => {
-          lastSaved.current = Date.now();
-          setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }));
-          setRemarks(prev => ({ ...prev, [selectedMachine.id]: text }));
-    // ✅ เพิ่ม: คง partNo เดิมไว้ใน state
-          const currentPartNo = partNos[selectedMachine.id] ?? undefined;
-          const BASE = `http://${window.location.hostname}:4000/api`;
-          const res = await fetch(`${BASE}/machines/${selectedMachine.id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-    // ✅ เพิ่ม: ส่ง part_no ไปด้วยทุกครั้ง
-            body: JSON.stringify({ status: ns, remark: text, updated_by: 'operator', ...(currentPartNo ? { part_no: currentPartNo } : {}) }),
-        });
-        const json = await res.json();
-        if (!json.ok) throw new Error(json.error || 'Save failed');
-      }}
+          onApply={async (ns, text, partNo) => {
+            lastSaved.current = Date.now();
+            setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }));
+            setRemarks(prev => ({ ...prev, [selectedMachine.id]: text }));
+            const currentPartNo = partNos[selectedMachine.id] ?? undefined;
+            const res = await fetch(`${MC_BASE}/machines/${selectedMachine.id}/status`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: ns, remark: text, updated_by: 'operator', ...(currentPartNo ? { part_no: currentPartNo } : {}) }),
+            });
+            const json = await res.json();
+            if (!json.ok) throw new Error(json.error || 'Save failed');
+          }}
           now={now}
         />
+      )}
+
+      {/* Confirm Dialog */}
+      {confirmDialog && (
+        <div style={{
+          position:'fixed', inset:0, background:'rgba(0,0,0,0.45)',
+          display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999
+        }}>
+          <div style={{
+            background:'var(--bg)', border:'1px solid var(--rule-2)',
+            borderRadius:10, padding:28, width:320,
+            boxShadow:'0 8px 32px rgba(0,0,0,0.18)'
+          }}>
+            {confirmDialog.type === 'delete' ? (
+              <>
+                <div style={{ fontFamily:'Manrope', fontSize:15, fontWeight:600, color:'var(--ink)', marginBottom:8 }}>
+                  ยืนยันการลบ
+                </div>
+                <div style={{ fontFamily:'Manrope', fontSize:13, color:'var(--ink-2)', marginBottom:20 }}>
+                  ต้องการลบเครื่อง <strong>{confirmDialog.id}</strong> ออกจากระบบ?<br/>
+                  <span style={{ fontSize:11, color:'var(--muted)' }}>การลบจะไม่สามารถกู้คืนได้</span>
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={() => setConfirmDialog(null)}
+                    style={{ flex:1, padding:'8px 0', borderRadius:6, border:'1px solid var(--rule-2)', background:'var(--surface)', cursor:'pointer', fontFamily:'Manrope', fontSize:13 }}>
+                    Cancel
+                  </button>
+                  <button onClick={confirmDelete}
+                    style={{ flex:1, padding:'8px 0', borderRadius:6, border:'none', background:'var(--st-down)', color:'#fff', cursor:'pointer', fontFamily:'Manrope', fontSize:13, fontWeight:600 }}>
+                    ยืนยันลบ
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontFamily:'Manrope', fontSize:15, fontWeight:600, color:'var(--ink)', marginBottom:16 }}>
+                  เพิ่มเครื่องใหม่
+                </div>
+                <div style={{ marginBottom:10 }}>
+                  <div style={{ fontFamily:'IBM Plex Mono', fontSize:9, letterSpacing:'.16em', textTransform:'uppercase', color:'var(--muted)', marginBottom:4 }}>Machine ID</div>
+                  <input
+                    value={confirmDialog.id}
+                    onChange={e => setConfirmDialog(prev => ({ ...prev, id: e.target.value.toUpperCase() }))}
+                    style={{ width:'100%', padding:'7px 10px', borderRadius:6, border:'1px solid var(--rule-2)', background:'var(--surface)', fontFamily:'IBM Plex Mono', fontSize:13, color:'var(--ink)', outline:'none', boxSizing:'border-box' }}
+                  />
+                </div>
+                <div style={{ marginBottom:10 }}>
+                  <div style={{ fontFamily:'IBM Plex Mono', fontSize:9, letterSpacing:'.16em', textTransform:'uppercase', color:'var(--muted)', marginBottom:4 }}>Capacity (T)</div>
+                  <input
+                    type="number"
+                    value={confirmDialog.cap}
+                    onChange={e => setConfirmDialog(prev => ({ ...prev, cap: Number(e.target.value) }))}
+                    style={{ width:'100%', padding:'7px 10px', borderRadius:6, border:'1px solid var(--rule-2)', background:'var(--surface)', fontFamily:'IBM Plex Mono', fontSize:13, color:'var(--ink)', outline:'none', boxSizing:'border-box' }}
+                  />
+                </div>
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontFamily:'IBM Plex Mono', fontSize:9, letterSpacing:'.16em', textTransform:'uppercase', color:'var(--muted)', marginBottom:6 }}>Category</div>
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4 }}>
+                    {Object.entries(CAT_META).map(([key, cm]) => (
+                      <button key={key}
+                        onClick={() => setConfirmDialog(prev => ({ ...prev, category: key }))}
+                        style={{
+                          display:'flex', alignItems:'center', gap:6, padding:'6px 8px',
+                          borderRadius:4, border:`1px solid ${confirmDialog.category === key ? cm.color : 'var(--rule)'}`,
+                          background: confirmDialog.category === key ? 'var(--bg)' : 'var(--surface)',
+                          cursor:'pointer', fontSize:11, fontFamily:'Manrope', color:'var(--ink-2)',
+                        }}
+                      >
+                        <span style={{ width:7, height:7, borderRadius:'50%', background:cm.color, display:'inline-block' }}/>
+                        {cm.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <button onClick={() => setConfirmDialog(null)}
+                    style={{ flex:1, padding:'8px 0', borderRadius:6, border:'1px solid var(--rule-2)', background:'var(--surface)', cursor:'pointer', fontFamily:'Manrope', fontSize:13 }}>
+                    Cancel
+                  </button>
+                  <button onClick={confirmAdd}
+                    style={{ flex:1, padding:'8px 0', borderRadius:6, border:'none', background:'var(--gold)', color:'#fff', cursor:'pointer', fontFamily:'Manrope', fontSize:13, fontWeight:600 }}>
+                    ยืนยันเพิ่ม
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </>
   );

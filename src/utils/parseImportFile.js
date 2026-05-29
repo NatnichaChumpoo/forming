@@ -5,22 +5,33 @@ async function parseImportFile(arrayBuffer, statuses, partNos, lastSavedRef) {
   const sheet    = workbook.Sheets[workbook.SheetNames[0]];
   const rows     = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-  // หา index จาก header name — ไม่สนลำดับคอลัมน์
-  const headerRow = (rows[0] || []).map(h => String(h ?? '').trim().toLowerCase());
-  const idxStatus = headerRow.findIndex(h => h === 'status');
-  const idxMcNo   = headerRow.findIndex(h => h === 'mc no.');
-  const idxPartNo = headerRow.findIndex(h => h === 'part no');
+  // หา header row อัตโนมัติ — scan 10 แถวแรก
+  let headerRowIndex = 0;
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const r = (rows[i] || []).map(h => String(h ?? '').trim().toLowerCase());
+    if (r.some(h => h.includes('mc no') || h.includes('m/c no'))) {
+      headerRowIndex = i;
+      break;
+    }
+  }
+
+  const headerRow = (rows[headerRowIndex] || []).map(h => String(h ?? '').trim().toLowerCase());
+
+  // รองรับชื่อคอลัมน์หลายแบบ
+  const idxStatus = headerRow.findIndex(h => h.includes('status'));
+  const idxMcNo   = headerRow.findIndex(h => h.includes('mc no') || h.includes('m/c no'));
+  const idxPartNo = headerRow.findIndex(h => h.includes('part no'));
 
   if (idxStatus === -1 || idxMcNo === -1) {
     return {
       newStatuses: statuses,
       newPartNos:  partNos,
       updatedCount: 0,
-      summary: '⚠ ไฟล์ไม่ถูกต้อง — ไม่พบคอลัมน์ "Status" หรือ "MC No."',
+      summary: '⚠ ไฟล์ไม่ถูกต้อง — ไม่พบคอลัมน์ที่ต้องการ',
     };
   }
 
-  const dataRows = rows.slice(1).filter(r => r[idxMcNo]);
+  const dataRows = rows.slice(headerRowIndex + 1).filter(r => r[idxMcNo]);
 
   const newStatuses = { ...statuses };
   const newPartNos  = { ...partNos  };
