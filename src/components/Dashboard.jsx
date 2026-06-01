@@ -64,16 +64,24 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
             </div>
 
             <div style={{ marginBottom:8 }}>
-              <div style={{ fontFamily:'IBM Plex Mono', fontSize:8, letterSpacing:'.18em', textTransform:'uppercase', color:'var(--muted)', marginBottom:3 }}>Machine ID</div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:3 }}>
+                <div style={{ fontFamily:'IBM Plex Mono', fontSize:8, letterSpacing:'.18em', textTransform:'uppercase', color:'var(--muted)' }}>Machine ID</div>
+                {renameVal !== m.id && (
+                  <div style={{ fontFamily:'IBM Plex Mono', fontSize:8, color:'var(--gold)', letterSpacing:'.06em' }}>⚠ จะเปลี่ยน ID จริงใน DB</div>
+                )}
+              </div>
               <input
                 key={m.id + '_name'}
                 value={renameVal}
-                onChange={e => { setRenameVal(e.target.value); if (renameWarn) setRenameWarn(''); }}
+                onChange={e => { setRenameVal(e.target.value.toUpperCase()); if (renameWarn) setRenameWarn(''); }}
                 onBlur={applyRename}
                 onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') { setRenameVal(m.displayId || m.id); setRenameWarn(''); } }}
-                style={{ width:'100%', background:'var(--surface)', border:'1px solid var(--rule-2)', borderRadius:4, padding:'5px 8px', fontFamily:'IBM Plex Mono', fontSize:11, color:'var(--ink)', outline:'none', boxSizing:'border-box' }}
+                style={{ width:'100%', background:'var(--surface)', border:`1px solid ${renameVal !== m.id ? 'var(--gold)' : 'var(--rule-2)'}`, borderRadius:4, padding:'5px 8px', fontFamily:'IBM Plex Mono', fontSize:11, color:'var(--ink)', outline:'none', boxSizing:'border-box' }}
               />
               {renameWarn && <div style={{ fontFamily:'IBM Plex Mono', fontSize:9, color:'var(--st-down)', marginTop:3 }}>{renameWarn}</div>}
+              <div style={{ fontFamily:'IBM Plex Mono', fontSize:8, color:'var(--muted)', marginTop:3, lineHeight:1.5 }}>
+                Enter เพื่อยืนยัน · Esc ยกเลิก
+              </div>
             </div>
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:8 }}>
@@ -490,14 +498,60 @@ function Dashboard() {
                   body: JSON.stringify({ cap: newCap }),
                 }).catch(console.warn);
               }}
-              onRename={name => {
+              onRename={async (name) => {
                 if (!selected) return;
-                setMachines(ms => ms.map(m => m.id === selected ? { ...m, displayId: name } : m));
-                fetch(`${MC_BASE}/machines/${selected}`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
-                  body: JSON.stringify({ display_id: name }),
-                }).catch(console.warn);
+                const oldId = selected;
+                const currentMachine = machines.find(m => m.id === oldId);
+                if (!currentMachine) return;
+
+                // ถ้า name ตรงกับ id เดิม → แค่ update display_id
+                if (name === oldId) {
+                  setMachines(ms => ms.map(m => m.id === oldId ? { ...m, displayId: name } : m));
+                  fetch(`${MC_BASE}/machines/${oldId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
+                    body: JSON.stringify({ display_id: name }),
+                  }).catch(console.warn);
+                  return;
+                }
+
+                // ชื่อใหม่ต่างจาก id เดิม → ต้อง rename primary key จริง
+                try {
+                  const res = await fetch(`${MC_BASE}/machines/${oldId}/rename-id`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
+                    body: JSON.stringify({ new_id: name }),
+                  });
+                  const json = await res.json();
+                  if (!json.ok) throw new Error(json.error);
+
+                  // อัพเดท state ทั้งหมดให้ใช้ id ใหม่
+                  const newId = json.new_id;
+                  setMachines(ms => ms.map(m =>
+                    m.id === oldId
+                      ? { ...m, id: newId, displayId: newId }
+                      : m
+                  ));
+                  setStatuses(prev => {
+                    const next = { ...prev };
+                    next[newId] = next[oldId];
+                    delete next[oldId];
+                    return next;
+                  });
+                  setPartNos(prev => {
+                    const next = { ...prev };
+                    if (next[oldId] !== undefined) { next[newId] = next[oldId]; delete next[oldId]; }
+                    return next;
+                  });
+                  setRemarks(prev => {
+                    const next = { ...prev };
+                    if (next[oldId] !== undefined) { next[newId] = next[oldId]; delete next[oldId]; }
+                    return next;
+                  });
+                  setSelected(newId);
+                } catch (err) {
+                  alert('Rename failed: ' + err.message);
+                }
               }}
               onDelete={id => openDeleteConfirm(id)}
               onAdd={openAddConfirm}

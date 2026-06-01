@@ -85,6 +85,61 @@ router.patch('/:id', adminAuth, async (req, res) => {
   }
 });
 
+// ── Rename primary key (id) — transaction-safe ──
+// PATCH /api/machines/:id/rename-id  body: { new_id: "C03" }
+router.patch('/:id/rename-id', adminAuth, async (req, res) => {
+  const oldId = req.params.id.toUpperCase();
+  const newId = (req.body.new_id || '').trim().toUpperCase();
+
+  if (!newId) {
+    return res.status(400).json({ ok: false, error: 'new_id is required' });
+  }
+  if (newId === oldId) {
+    return res.status(400).json({ ok: false, error: 'new_id must differ from current id' });
+  }
+
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // ตรวจ id ใหม่ไม่ซ้ำ
+    const [[existing]] = await conn.query(
+      'SELECT id FROM machines WHERE id = ?', [newId]
+    );
+    if (existing) {
+      await conn.rollback();
+      conn.release();
+      return res.status(409).json({ ok: false, error: `ID "${newId}" already exists` });
+    }
+
+    // ปิด FK ชั่วคราว เพื่อ update primary key ได้
+    await conn.query('SET FOREIGN_KEY_CHECKS = 0');
+
+    await conn.query(
+      'UPDATE status_logs    SET machine_id = ? WHERE machine_id = ?', [newId, oldId]
+    );
+    await conn.query(
+      'UPDATE machine_status SET machine_id = ? WHERE machine_id = ?', [newId, oldId]
+    );
+    await conn.query(
+      `UPDATE machines SET id = ?, display_id = ?, zone = ?
+       WHERE id = ?`,
+      [newId, newId, newId[0], oldId]
+    );
+
+    await conn.query('SET FOREIGN_KEY_CHECKS = 1');
+    await conn.commit();
+    conn.release();
+
+    res.json({ ok: true, old_id: oldId, new_id: newId });
+  } catch (err) {
+    await conn.query('SET FOREIGN_KEY_CHECKS = 1').catch(() => {});
+    await conn.rollback().catch(() => {});
+    conn.release();
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 router.delete('/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
