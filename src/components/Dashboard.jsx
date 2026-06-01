@@ -172,6 +172,8 @@ function Dashboard() {
   const [snapOn,   setSnapOn]   = useState(true);
   const [confirmDialog, setConfirmDialog] = useState(null);
   const lastSaved = useRef(0);
+  const adminPin  = useRef(null);
+  const [pinModal, setPinModal] = useState({ open: false, input: '', error: '', loading: false });
 
   const MC_BASE = `http://${window.location.hostname}:4000/api`;
 
@@ -252,7 +254,7 @@ function Dashboard() {
               lastSaved.current = Date.now();
               fetch(`${MC_BASE}/machines/${m.id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
                 body: JSON.stringify({ x: m.x, y: m.y }),
               }).catch(console.warn);
             }
@@ -312,7 +314,7 @@ function Dashboard() {
     try {
       const res = await fetch(`${MC_BASE}/machines`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
         body: JSON.stringify({ id: id.trim(), category, cap }),
       });
       const json = await res.json();
@@ -335,7 +337,10 @@ function Dashboard() {
     const { id } = confirmDialog;
     setConfirmDialog(null);
     try {
-      const res = await fetch(`${MC_BASE}/machines/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${MC_BASE}/machines/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-Admin-Pin': adminPin.current },
+      });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error);
       setMachines(ms => ms.filter(m => m.id !== id));
@@ -375,13 +380,41 @@ function Dashboard() {
   }, [selected, machines, editMode]);
 
   function toggleEditMode() {
-    setEditMode(p => {
-      const next = !p;
-      if (next) setSidebarCollapsed(false);
-      return next;
-    });
-    setSelected(null);
-    setDrag(null);
+    if (editMode) {
+      setEditMode(false);
+      setSelected(null);
+      setDrag(null);
+      return;
+    }
+    if (adminPin.current) {
+      setEditMode(true);
+      setSidebarCollapsed(false);
+      setSelected(null);
+      return;
+    }
+    setPinModal({ open: true, input: '', error: '', loading: false });
+  }
+
+  async function submitPin() {
+    const pin = pinModal.input.trim();
+    if (!pin) return;
+    setPinModal(prev => ({ ...prev, loading: true, error: '' }));
+    try {
+      const res  = await fetch(`${MC_BASE}/auth/verify`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ pin }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || 'PIN ไม่ถูกต้อง');
+      adminPin.current = pin;
+      setPinModal({ open: false, input: '', error: '', loading: false });
+      setEditMode(true);
+      setSidebarCollapsed(false);
+      setSelected(null);
+    } catch (err) {
+      setPinModal(prev => ({ ...prev, loading: false, error: err.message }));
+    }
   }
 
   return (
@@ -443,7 +476,7 @@ function Dashboard() {
                 setMachines(ms => ms.map(m => m.id === selected ? { ...m, category: cat } : m));
                 fetch(`${MC_BASE}/machines/${selected}`, {
                   method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
                   body: JSON.stringify({ category: cat }),
                 }).catch(console.warn);
               }}
@@ -453,7 +486,7 @@ function Dashboard() {
                 setMachines(ms => ms.map(m => m.id === selected ? { ...m, cap: newCap } : m));
                 fetch(`${MC_BASE}/machines/${selected}`, {
                   method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
                   body: JSON.stringify({ cap: newCap }),
                 }).catch(console.warn);
               }}
@@ -462,7 +495,7 @@ function Dashboard() {
                 setMachines(ms => ms.map(m => m.id === selected ? { ...m, displayId: name } : m));
                 fetch(`${MC_BASE}/machines/${selected}`, {
                   method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
+                  headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
                   body: JSON.stringify({ display_id: name }),
                 }).catch(console.warn);
               }}
@@ -484,6 +517,7 @@ function Dashboard() {
             collapsed={sidebarCollapsed}
             onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
             lastSaved={lastSaved}
+            machines={machines}
           />
         )}
 
@@ -543,6 +577,63 @@ function Dashboard() {
           }}
           now={now}
         />
+      )}
+
+      {/* PIN Modal */}
+      {pinModal.open && (
+        <div style={{
+          position:'fixed', inset:0, background:'rgba(0,0,0,0.55)',
+          display:'flex', alignItems:'center', justifyContent:'center', zIndex:9999,
+        }}>
+          <div style={{
+            background:'var(--bg)', border:'1px solid var(--rule-2)',
+            borderRadius:10, padding:28, width:300,
+            boxShadow:'0 8px 32px rgba(0,0,0,0.22)',
+          }}>
+            <div style={{ fontFamily:'Manrope', fontSize:15, fontWeight:600, color:'var(--ink)', marginBottom:6 }}>
+              Admin Access Required
+            </div>
+            <div style={{ fontFamily:'Manrope', fontSize:12, color:'var(--muted)', marginBottom:16 }}>
+              กรอก PIN 4 หลัก เพื่อเข้าสู่โหมด Edit Layout
+            </div>
+            <input
+              type="password"
+              placeholder="PIN"
+              value={pinModal.input}
+              maxLength={4}
+              autoFocus
+              onChange={e => setPinModal(prev => ({ ...prev, input: e.target.value, error: '' }))}
+              onKeyDown={e => { if (e.key === 'Enter') submitPin(); if (e.key === 'Escape') setPinModal(prev => ({ ...prev, open: false })); }}
+              style={{
+                width:'100%', padding:'8px 10px', borderRadius:6, boxSizing:'border-box',
+                border:`1px solid ${pinModal.error ? 'var(--st-down)' : 'var(--rule-2)'}`,
+                background:'var(--surface)', fontFamily:'IBM Plex Mono', fontSize:14,
+                color:'var(--ink)', outline:'none', marginBottom:6,
+                letterSpacing:'0.2em',
+              }}
+            />
+            {pinModal.error && (
+              <div style={{ fontFamily:'Manrope', fontSize:12, color:'var(--st-down)', marginBottom:10 }}>
+                {pinModal.error}
+              </div>
+            )}
+            <div style={{ display:'flex', gap:8, marginTop:12 }}>
+              <button
+                onClick={() => setPinModal(prev => ({ ...prev, open: false }))}
+                style={{ flex:1, padding:'8px 0', borderRadius:6, border:'1px solid var(--rule-2)', background:'var(--surface)', cursor:'pointer', fontFamily:'Manrope', fontSize:13 }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitPin}
+                disabled={pinModal.loading}
+                style={{ flex:1, padding:'8px 0', borderRadius:6, border:'none', background:'var(--gold)', color:'#fff', cursor:'pointer', fontFamily:'Manrope', fontSize:13, fontWeight:600, opacity: pinModal.loading ? 0.6 : 1 }}
+              >
+                {pinModal.loading ? '...' : 'เข้าสู่ระบบ'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Confirm Dialog */}

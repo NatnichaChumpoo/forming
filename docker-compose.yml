@@ -19,6 +19,7 @@ services:
       DB_USER: forming_user
       DB_PASSWORD: ${MYSQL_PASSWORD:-forming1234}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://10.255.255.173,http://localhost,http://localhost:5173}
+      ADMIN_PIN: ${ADMIN_PIN:-1996}
     ports:
       - "${BACKEND_PORT:-4000}:4000"
     depends_on:

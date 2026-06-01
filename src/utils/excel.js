@@ -80,7 +80,7 @@ const _XC = {
   muted:     'FF6B7280',
 };
 
-async function exportStatusFile(statuses, partNos, counts, total, plan, actual) {
+async function exportStatusFile(statuses, partNos, counts, total, plan, actual, machines) {
   // ── Computed values ──────────────────────────────────────────────────────
   const ng   = 0;                       // NG: 0 (no defect count in app state)
   const diff = plan - actual;
@@ -154,7 +154,12 @@ async function exportStatusFile(statuses, partNos, counts, total, plan, actual) 
     'Total Machine','Man Power',
   ];
 
-  const dataRows = EXPORT_ORDER.map((id, idx) => {
+  const extraIds = (machines || [])
+    .map(m => m.id)
+    .filter(id => !EXPORT_ORDER.includes(id));
+  const fullOrder = [...EXPORT_ORDER, ...extraIds];
+
+  const dataRows = fullOrder.map((id, idx) => {
     const meta   = MC_META[id] || { type:'', group:'', desc:'' };
     const stKey  = statuses[id] || 'plan';
     const stName = STATUS_EXPORT_NAME[stKey] || stKey;

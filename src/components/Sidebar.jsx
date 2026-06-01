@@ -57,7 +57,7 @@ function RailIconData() {
   );
 }
 
-function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, collapsed, onToggleCollapsed, lastSaved }) {
+function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, collapsed, onToggleCollapsed, lastSaved, machines }) {
   const plan       = 5416750;
   const actual     = 3486451;
   const ng         = 0;
@@ -121,7 +121,7 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, co
 
   // ── Export ──
   function handleExport() {
-    exportStatusFile(statuses, partNos, counts, total, plan, actual);
+    exportStatusFile(statuses, partNos, counts, total, plan, actual, machines);
   }
 
   if (collapsed) {

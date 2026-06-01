@@ -1,5 +1,6 @@
-const router = require('express').Router();
-const db     = require('../db');
+const router    = require('express').Router();
+const db        = require('../db');
+const adminAuth = require('../middleware/adminAuth');
 
 router.get('/', async (req, res) => {
   try {
@@ -43,7 +44,7 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', adminAuth, async (req, res) => {
   const { id, category, cap } = req.body;
   if (!id || !category || !cap) {
     return res.status(400).json({ ok: false, error: 'id, category, cap are required' });
@@ -64,7 +65,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   const { category, cap, display_id, x, y } = req.body;
   try {
@@ -84,7 +85,7 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
     await db.query(`DELETE FROM status_logs   WHERE machine_id = ?`, [id]);
