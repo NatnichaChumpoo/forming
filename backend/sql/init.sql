@@ -87,3 +87,11 @@ INSERT IGNORE INTO machines (id, display_id, category, cap, zone, x, y) VALUES
 -- Seed สถานะเริ่มต้นทุกเครื่องเป็น running
 INSERT IGNORE INTO machine_status (machine_id, status)
 SELECT id, 'running' FROM machines;
+
+-- Migration: rename C05 → C03 (แก้ชื่อเครื่องที่ผิด)
+-- ต้องจัดการ FK ก่อน เพราะ machine_status และ status_logs อ้างอิง machines.id
+SET FOREIGN_KEY_CHECKS = 0;
+UPDATE status_logs    SET machine_id  = 'C03' WHERE machine_id  = 'C05';
+UPDATE machine_status SET machine_id  = 'C03' WHERE machine_id  = 'C05';
+UPDATE machines       SET id = 'C03', display_id = 'C03', zone = 'C' WHERE id = 'C05';
+SET FOREIGN_KEY_CHECKS = 1;
