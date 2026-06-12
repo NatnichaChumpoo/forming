@@ -29,3 +29,6 @@ pnpm-debug.log*
 # OS/editor noise.
 .DS_Store
 Thumbs.db
+
+# One-off migration / sync scripts — local use only
+scripts/sync_server_db.sql

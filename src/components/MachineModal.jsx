@@ -4,15 +4,7 @@
 // ─────────────────────────────────────────────
 
 
-function MachineModal({ machine, status, partNo, remark, onClose, onApply, now }) {
-  const [draft,       setDraft]       = useState(status);
-  const [draftRemark, setDraftRemark] = useState(remark || '');
-  const [isSaving,    setIsSaving]    = useState(false);
-  const [saveResult,  setSaveResult]  = useState(null); // null | 'ok' | 'err'
-
-  useEffect(() => setDraft(status), [status, machine.id]);
-  useEffect(() => setDraftRemark(remark || ''), [machine.id]);
-
+function MachineModal({ machine, status, partNo, remark, onClose, now }) {
   return (
     <div className="modal-scrim" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
@@ -33,8 +25,8 @@ function MachineModal({ machine, status, partNo, remark, onClose, onApply, now }
           <div className="field">
             <span className="k">Current Status</span>
             <span className="v" style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ width:10, height:10, borderRadius:2, background:stVar(draft) }}/>
-              {(statusByKey[draft] || statusByKey['running']).name}
+              <span style={{ width:10, height:10, borderRadius:2, background:stVar(status) }}/>
+              {(statusByKey[status] || statusByKey['running']).name}
             </span>
           </div>
 
@@ -67,26 +59,28 @@ function MachineModal({ machine, status, partNo, remark, onClose, onApply, now }
             <span className="k">Remark</span>
             <textarea
               className="remark"
-              value={draftRemark}
-              placeholder={REMARKS[draft]}
-              onChange={e => setDraftRemark(e.target.value)}
+              value={remark || ''}
+              placeholder={REMARKS[status]}
+              readOnly
               rows={3}
             />
           </div>
 
-          {/* ── Status picker ── */}
+          {/* ── Status (read-only) ── */}
           <div className="status-selector">
-            <div className="lbl">Reassign Status</div>
-            <div className="status-grid">
+            <div className="lbl">
+              <span>Status</span>
+              <span className="lock-hint">🔒 View only · แก้ไขได้ที่ Edit Layout</span>
+            </div>
+            <div className="status-grid locked">
               {STATUSES.map(s => (
-                <button
+                <div
                   key={s.key}
-                  className={`status-opt ${draft === s.key ? 'active' : ''}`}
-                  onClick={() => setDraft(s.key)}
+                  className={`status-opt readonly ${status === s.key ? 'active' : ''}`}
                 >
                   <span className="dot" style={{ background: stVar(s.key) }}/>
                   <span className="nm">{s.name}</span>
-                </button>
+                </div>
               ))}
             </div>
           </div>
@@ -95,30 +89,6 @@ function MachineModal({ machine, status, partNo, remark, onClose, onApply, now }
         {/* ── Footer ── */}
         <div className="modal-foot">
           <div className="left">Audit log · {machine.displayId || machine.id} · {shortTime(now)}</div>
-          <div className="actions">
-            <button className="btn" onClick={onClose} disabled={isSaving}>Cancel</button>
-            <button
-              className="btn primary"
-              disabled={isSaving}
-              onClick={async () => {
-                setIsSaving(true);
-                setSaveResult(null);
-                try {
-                  await onApply(draft, draftRemark, partNo);
-                  setSaveResult('ok');
-                  setTimeout(() => onClose(), 1200);
-                } catch (e) {
-                  setSaveResult('err');
-                  setIsSaving(false);
-                }
-              }}
-            >
-              {isSaving && saveResult === null && 'Saving…'}
-              {saveResult === 'ok'  && '✓ บันทึกสำเร็จ'}
-              {saveResult === 'err' && '✗ บันทึกไม่สำเร็จ — ลองใหม่'}
-              {!isSaving && saveResult === null && 'Apply Change'}
-            </button>
-          </div>
         </div>
 
       </div>

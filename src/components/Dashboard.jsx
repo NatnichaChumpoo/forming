@@ -23,7 +23,7 @@ function initialStatuses() {
 }
 
 /* ── Edit-mode left sidebar ── */
-function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChange, onDelete, onAdd, onReSnap, snapOn, onSnapToggle, onRename }) {
+function EditSidebar({ machines, selectedId, catCounts, statuses, onSetCategory, onSetStatus, onCapChange, onDelete, onAdd, onReSnap, snapOn, onSnapToggle, onRename }) {
   const m   = selectedId ? machines.find(mm => mm.id === selectedId) : null;
   const cat = m ? (CAT_META[m.category] || { name: m.category, color: '#B8965A' }) : null;
   const [renameVal,  setRenameVal]  = useState(m ? (m.displayId || m.id) : '');
@@ -120,6 +120,27 @@ function EditSidebar({ machines, selectedId, catCounts, onSetCategory, onCapChan
                   {cm.name}
                 </button>
               ))}
+            </div>
+
+            <div style={{ fontFamily:'IBM Plex Mono', fontSize:8, letterSpacing:'.18em', textTransform:'uppercase', color:'var(--muted)', margin:'10px 0 5px', paddingTop:10, borderTop:'1px solid var(--rule)' }}>Status</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:4 }}>
+              {STATUSES.map(s => {
+                const active = (statuses[m.id] || 'running') === s.key;
+                return (
+                  <button key={s.key}
+                    onClick={() => onSetStatus(s.key)}
+                    style={{
+                      display:'flex', alignItems:'center', gap:5, padding:'5px 7px',
+                      borderRadius:4, border:`1px solid ${active ? 'var(--ink)' : 'var(--rule)'}`,
+                      background: active ? '#FBF6E6' : 'var(--surface)',
+                      cursor:'pointer', fontSize:10, fontFamily:'Manrope', color:'var(--ink-2)',
+                    }}
+                  >
+                    <span style={{ width:7, height:7, borderRadius:2, background:stVar(s.key), display:'inline-block', flexShrink:0 }}/>
+                    {s.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         ) : (
@@ -479,6 +500,17 @@ function Dashboard() {
               machines={machines}
               selectedId={selected}
               catCounts={catCounts}
+              statuses={statuses}
+              onSetStatus={st => {
+                if (!selected) return;
+                lastSaved.current = Date.now();
+                setStatuses(prev => ({ ...prev, [selected]: st }));
+                fetch(`${MC_BASE}/machines/${selected}/status`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': adminPin.current },
+                  body: JSON.stringify({ status: st, updated_by: 'admin' }),
+                }).catch(console.warn);
+              }}
               onSetCategory={cat => {
                 if (!selected) return;
                 setMachines(ms => ms.map(m => m.id === selected ? { ...m, category: cat } : m));
@@ -608,7 +640,7 @@ function Dashboard() {
         aria-hidden="true"
       />
 
-      {/* Modal — normal mode only */}
+      {/* Modal — normal mode only (read-only) */}
       {selectedMachine && (
         <MachineModal
           machine={selectedMachine}
@@ -616,19 +648,6 @@ function Dashboard() {
           partNo={partNos[selectedMachine.id] || null}
           remark={remarks[selectedMachine.id] || ''}
           onClose={() => setSelected(null)}
-          onApply={async (ns, text, partNo) => {
-            lastSaved.current = Date.now();
-            setStatuses(prev => ({ ...prev, [selectedMachine.id]: ns }));
-            setRemarks(prev => ({ ...prev, [selectedMachine.id]: text }));
-            const currentPartNo = partNos[selectedMachine.id] ?? undefined;
-            const res = await fetch(`${MC_BASE}/machines/${selectedMachine.id}/status`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ status: ns, remark: text, updated_by: 'operator', ...(currentPartNo ? { part_no: currentPartNo } : {}) }),
-            });
-            const json = await res.json();
-            if (!json.ok) throw new Error(json.error || 'Save failed');
-          }}
           now={now}
         />
       )}
