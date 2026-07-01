@@ -57,13 +57,16 @@ function RailIconData() {
   );
 }
 
-function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, collapsed, onToggleCollapsed, lastSaved, machines }) {
-  const plan       = 5416750;
-  const actual     = 3486451;
-  const ng         = 0;
-  const diff       = plan - actual;
-  const productivity = (actual / plan) * 100;
-  const manPower   = 21;
+function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, collapsed, onToggleCollapsed, lastSaved, machines, production, setProduction }) {
+  // ทุกช่องสะท้อนไฟล์ตรง ๆ — ว่าง (null) หรือ 0 จะแสดงเป็น "–"
+  const DASH       = '—';
+  const blank      = v => v == null || v === 0;
+  const plan       = production?.plan   ?? null;
+  const actual     = production?.actual ?? null;
+  const ng         = production?.ng     ?? null;
+  const manPower   = production?.man_power ?? null;
+  const diff       = production?.diff   ?? null;
+  const productivity = production?.productivity != null ? Number(production.productivity) : null;
   const fileInputRef = useRef(null);
   const [importFeedback, setImportFeedback]   = React.useState('');
   const [importIsErr,    setImportIsErr]      = React.useState(false);
@@ -104,10 +107,11 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, co
     const reader = new FileReader();
     reader.onload = async evt => {
       try {
-        const { newStatuses, newPartNos, summary } =
+        const { newStatuses, newPartNos, newProduction, summary } =
           await parseImportFile(evt.target.result, statuses, partNos, lastSaved);
         setStatuses(newStatuses);
         setPartNos(newPartNos);
+        if (newProduction && setProduction) setProduction(newProduction);
         setImportFeedback(summary);
         setImportIsErr(false);
       } catch (err) {
@@ -121,7 +125,7 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, co
 
   // ── Export ──
   function handleExport() {
-    exportStatusFile(statuses, partNos, counts, total, plan, actual, machines);
+    exportStatusFile(statuses, partNos, counts, total, plan || 0, actual || 0, machines);
   }
 
   if (collapsed) {
@@ -237,27 +241,27 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, co
       <div className="ops-snapshot">
         <div className="ops-row">
           <span className="k">Plan</span>
-          <span className="v">{fmtNum(plan)}<span className="u">pcs</span></span>
+          <span className="v">{blank(plan) ? DASH : <>{fmtNum(plan)}<span className="u">pcs</span></>}</span>
         </div>
         <div className="ops-row">
           <span className="k">Actual</span>
-          <span className="v">{fmtNum(actual)}<span className="u">pcs</span></span>
+          <span className="v">{blank(actual) ? DASH : <>{fmtNum(actual)}<span className="u">pcs</span></>}</span>
         </div>
         <div className="ops-row emphasis">
           <span className="k">Diff</span>
-          <span className="v">{fmtNum(diff)}<span className="u">pcs</span></span>
+          <span className="v">{blank(diff) ? DASH : <>{fmtNum(diff)}<span className="u">pcs</span></>}</span>
         </div>
         <div className="ops-row">
           <span className="k">NG</span>
-          <span className="v">{ng > 0 ? fmtNum(ng) : '—'}</span>
+          <span className="v">{blank(ng) ? DASH : fmtNum(ng)}</span>
         </div>
         <div className="ops-row emphasis">
           <span className="k">Productivity</span>
-          <span className="v">{productivity.toFixed(2)}<span className="u">%</span></span>
+          <span className="v">{blank(productivity) ? DASH : <>{productivity.toFixed(2)}<span className="u">%</span></>}</span>
         </div>
         <div className="ops-row">
           <span className="k">Man Power</span>
-          <span className="v">{manPower}</span>
+          <span className="v">{blank(manPower) ? DASH : manPower}</span>
         </div>
       </div>
 
@@ -344,7 +348,7 @@ function Sidebar({ counts, total, statuses, partNos, setStatuses, setPartNos, co
 
       <div className="legend-foot" style={{ marginTop:6 }}>
         <div className="ttl">Operations notes</div>
-        <div className="ln">Cycle target <span className="v">{(plan / 24 / 60).toFixed(0)} pcs/min</span></div>
+        <div className="ln">Cycle target <span className="v">{blank(plan) ? DASH : `${(plan / 24 / 60).toFixed(0)} pcs/min`}</span></div>
         <div className="ln">Next mold change <span className="v">B11 · 14:20</span></div>
       </div>
     </div>

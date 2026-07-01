@@ -8,8 +8,9 @@ app.use(cors({ origin: getCorsOrigin(process.env.CORS_ORIGIN) }));
 app.use(express.json());
 
 // Routes
-app.use('/api/auth',     require('./routes/auth'));
-app.use('/api/machines', require('./routes/machines'));
+app.use('/api/auth',       require('./routes/auth'));
+app.use('/api/machines',   require('./routes/machines'));
+app.use('/api/production', require('./routes/production'));
 
 // Health check
 app.get('/api/health', (req, res) => {

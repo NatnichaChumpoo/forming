@@ -22,6 +22,16 @@ async function parseImportFile(arrayBuffer, statuses, partNos, lastSavedRef) {
   const idxMcNo   = headerRow.findIndex(h => h.includes('mc no') || h.includes('m/c no'));
   const idxPartNo = headerRow.findIndex(h => h.includes('part no'));
 
+  // คอลัมน์สรุปยอดผลิต (มาจากแถว summary แถวเดียว)
+  const idxPlan     = headerRow.findIndex(h => h.includes('plan') && !h.includes('no plan'));
+  const idxActual   = headerRow.findIndex(h => h.includes('actual'));
+  const idxNg       = headerRow.findIndex(h => /(^|\W)ng(\W|$)/.test(h)); // กัน "running"
+  // "Man Power" (ยอดคน) ต้องไม่ชนกับคอลัมน์สถานะ "NO Manpower"
+  const idxManPower = headerRow.findIndex(h => (h.includes('man power') || h.includes('manpower')) && !h.includes('no man'));
+  // diff/productivity: ถ้าไฟล์กรอกมาจะใช้ค่าจากไฟล์ (สูตรโรงงาน) ถ้าเว้นว่างเว็บคำนวณเอง
+  const idxDiff         = headerRow.findIndex(h => h.includes('diff'));
+  const idxProductivity = headerRow.findIndex(h => h.includes('productivity'));
+
   if (idxStatus === -1 || idxMcNo === -1) {
     return {
       newStatuses: statuses,
@@ -75,6 +85,40 @@ async function parseImportFile(arrayBuffer, statuses, partNos, lastSavedRef) {
     )
   );
 
+  // ── แถว summary: ดึงยอดผลิตรวม แล้วเขียนลง production_summary ──
+  // แถว summary = แถวแรกที่มีค่า Plan เป็นตัวเลข
+  // ช่องว่าง/ไม่ใช่ตัวเลข → null (เว็บจะแสดงเป็น "–"), มีค่า → ตัวเลข
+  const toNumOrNull = v => {
+    if (v === undefined || v === null || String(v).trim() === '') return null;
+    const n = Number(String(v).replace(/[, %]/g, ''));
+    return Number.isFinite(n) ? n : null;
+  };
+  let newProduction = null;
+  if (idxPlan !== -1) {
+    // แถว summary = แถวแรกหลัง header ที่มีข้อมูล (ฟอร์แมต export วางยอดรวมไว้แถวแรก)
+    // อ่านและเขียนทับทุกครั้งเพื่อสะท้อนไฟล์ตรง ๆ — ช่องว่าง/0 จะแสดงเป็น "–"
+    const summaryRow = rows.slice(headerRowIndex + 1)
+      .find(r => r && r.some(c => String(c ?? '').trim() !== ''));
+    if (summaryRow) {
+      newProduction = {
+        plan:         toNumOrNull(summaryRow[idxPlan]),
+        actual:       idxActual   !== -1 ? toNumOrNull(summaryRow[idxActual])   : null,
+        ng:           idxNg       !== -1 ? toNumOrNull(summaryRow[idxNg])       : null,
+        man_power:    idxManPower !== -1 ? toNumOrNull(summaryRow[idxManPower]) : null,
+        diff:         idxDiff         !== -1 ? toNumOrNull(summaryRow[idxDiff])         : null,
+        productivity: idxProductivity !== -1 ? toNumOrNull(summaryRow[idxProductivity]) : null,
+        updated_by:   'import',
+      };
+      try {
+        await fetch(`${BASE()}/production`, {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(newProduction),
+        });
+      } catch (_) { /* ไม่ให้ล้มทั้ง import ถ้า production เขียนไม่สำเร็จ */ }
+    }
+  }
+
   if (lastSavedRef) lastSavedRef.current = Date.now();
 
   const failed = results
@@ -87,5 +131,5 @@ async function parseImportFile(arrayBuffer, statuses, partNos, lastSavedRef) {
   if (failed.length)  summary += ` · ⚠ ${failed.length} failed: ${failed.join(', ')}`;
   if (skipped.length) summary += ` · skipped ${skipped.length}: ${skipped.join(', ')}`;
 
-  return { newStatuses, newPartNos, updatedCount, summary };
+  return { newStatuses, newPartNos, newProduction, updatedCount, summary };
 }

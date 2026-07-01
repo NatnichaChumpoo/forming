@@ -36,6 +36,24 @@ CREATE TABLE IF NOT EXISTS status_logs (
   FOREIGN KEY (machine_id) REFERENCES machines(id)
 );
 
+-- ตารางสรุปยอดผลิต (แถวเดียว id=1) — มาจากแถว summary ของไฟล์ import
+-- diff/productivity: ถ้าไฟล์กรอกมาใช้ค่าจากไฟล์ (สูตรโรงงาน), ถ้า NULL หน้าเว็บคำนวณเอง
+CREATE TABLE IF NOT EXISTS production_summary (
+  id           INT          PRIMARY KEY DEFAULT 1,
+  plan         BIGINT       DEFAULT 0,
+  actual       BIGINT       DEFAULT 0,
+  ng           BIGINT       DEFAULT 0,
+  man_power    INT          DEFAULT 0,
+  diff         BIGINT       NULL,
+  productivity DECIMAL(6,2) NULL,
+  updated_at   TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  updated_by   VARCHAR(50)
+);
+
+-- Seed แถวเริ่มต้น (ค่าว่าง 0 ทั้งหมด) เพื่อให้มีแถว id=1 เสมอ
+INSERT IGNORE INTO production_summary (id, plan, actual, ng, man_power)
+VALUES (1, 0, 0, 0, 0);
+
 -- Seed ข้อมูลเครื่องจักรจาก machines.js
 INSERT IGNORE INTO machines (id, display_id, category, cap, zone, x, y) VALUES
 ('D08','D08','desma',250,'D',760,40),

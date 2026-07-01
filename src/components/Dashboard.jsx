@@ -192,6 +192,7 @@ function Dashboard() {
   const [statuses, setStatuses] = useState({});
   const [partNos,  setPartNos]  = useState({});
   const [remarks,  setRemarks]  = useState({});
+  const [production, setProduction] = useState({ plan: 0, actual: 0, ng: 0, man_power: 0 });
   const [selected, setSelected] = useState(null);
   const [now,      setNow]      = useState(new Date());
   const [editMode, setEditMode] = useState(false);
@@ -233,6 +234,13 @@ function Dashboard() {
         setPartNos(pn);
         setRemarks(rm);
         if (mc.length > 0) setMachines(mc);
+
+        // โหลดยอดผลิตรวม (production_summary)
+        try {
+          const pRes = await fetch(`${MC_BASE}/production`);
+          const pJson = await pRes.json();
+          if (pJson.data) setProduction(pJson.data);
+        } catch (_) { /* production endpoint ไม่พร้อม — คงค่าเดิมไว้ */ }
       } catch (e) {
         console.warn('API not reachable, using static data', e);
       }
@@ -604,6 +612,8 @@ function Dashboard() {
             onToggleCollapsed={() => setSidebarCollapsed(v => !v)}
             lastSaved={lastSaved}
             machines={machines}
+            production={production}
+            setProduction={setProduction}
           />
         )}
 
